@@ -98,11 +98,11 @@ export default function Home() {
       pointerColor="0, 122, 255"
       containerClassName="h-screen dark"
     >
-      <div className="absolute inset-0 z-10 flex flex-col p-6 gap-6">
+      <main className="absolute inset-0 z-10 flex flex-col p-6 gap-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center shadow-lg" aria-hidden="true">
               <Lock className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -110,11 +110,12 @@ export default function Home() {
               <p className="text-sm text-gray-300">Professional Lua code protection</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <nav className="flex gap-2" aria-label="Main actions">
             <Button
               onClick={copyToClipboard}
               disabled={!outputCode}
               className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+              aria-label={copySuccess ? "Copied to clipboard" : "Copy obfuscated code to clipboard"}
             >
               {copySuccess ? (
                 <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
@@ -127,6 +128,7 @@ export default function Home() {
               onClick={downloadCode}
               disabled={!outputCode}
               className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+              aria-label="Download obfuscated code as .lua file"
             >
               <Download className="w-4 h-4 mr-2" />
               Download
@@ -135,50 +137,55 @@ export default function Home() {
               onClick={obfuscateCode}
               disabled={!inputCode || isProcessing}
               className="bg-gradient-to-r from-[#007AFF] to-[#5856D6] hover:from-[#0066CC] hover:to-[#4644C7] text-white shadow-lg"
+              aria-label="Obfuscate Lua code"
             >
               <Shuffle className="w-4 h-4 mr-2" />
               {isProcessing ? "Processing..." : "Obfuscate"}
             </Button>
-          </div>
-        </div>
+          </nav>
+        </header>
 
         {/* Main Content */}
-        <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+        <section className="flex-1 grid grid-cols-12 gap-6 min-h-0" aria-label="Code editor workspace">
           {/* Code Editors */}
           <div className="col-span-8 flex flex-col gap-4 min-h-0">
             {/* Input Editor */}
-            <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Code className="w-4 h-4 text-[#007AFF]" />
-                  <h2 className="text-sm font-semibold text-white">Original Lua Code</h2>
+            <section aria-labelledby="input-code-heading">
+              <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Code className="w-4 h-4 text-[#007AFF]" aria-hidden="true" />
+                    <h2 id="input-code-heading" className="text-sm font-semibold text-white">Original Lua Code</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 min-h-0">
-                <CodeEditor value={inputCode} onChange={setInputCode} />
-              </div>
-            </Card>
+                <div className="flex-1 min-h-0">
+                  <CodeEditor value={inputCode} onChange={setInputCode} />
+                </div>
+              </Card>
+            </section>
 
             {/* Output Editor */}
-            <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-[#5856D6]" />
-                  <h2 className="text-sm font-semibold text-white">Obfuscated Output</h2>
+            <section aria-labelledby="output-code-heading">
+              <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#5856D6]" aria-hidden="true" />
+                    <h2 id="output-code-heading" className="text-sm font-semibold text-white">Obfuscated Output</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 min-h-0">
-                <CodeEditor value={outputCode} readOnly />
-              </div>
-            </Card>
+                <div className="flex-1 min-h-0">
+                  <CodeEditor value={outputCode} readOnly />
+                </div>
+              </Card>
+            </section>
           </div>
 
           {/* Settings Panel */}
-          <div className="col-span-4 min-h-0 overflow-auto">
+          <aside className="col-span-4 min-h-0 overflow-auto" aria-labelledby="settings-heading">
             <Card className="bg-background/40 backdrop-blur-xl border-white/10 p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Settings className="w-5 h-5 text-[#007AFF]" />
-                <h2 className="text-lg font-semibold text-white">Obfuscation Settings</h2>
+                <Settings className="w-5 h-5 text-[#007AFF]" aria-hidden="true" />
+                <h2 id="settings-heading" className="text-lg font-semibold text-white">Obfuscation Settings</h2>
               </div>
 
               <div className="space-y-6">
@@ -260,20 +267,20 @@ export default function Home() {
                 </div>
               </div>
             </Card>
-          </div>
-        </div>
+          </aside>
+        </section>
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <aside role="alert" aria-live="assertive" className="bg-red-900/20 border border-red-500 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="flex-1">
               <h3 className="text-red-300 font-semibold mb-1">Error</h3>
               <p className="text-red-200 text-sm">{error}</p>
             </div>
-          </div>
+          </aside>
         )}
-      </div>
+      </main>
     </BackgroundGradientAnimation>
   );
 }

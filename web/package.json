@@ -9,7 +9,10 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "generate:icons": "node generate-icons.js && node generate-favicon.js",
+    "generate:icons-only": "node generate-icons.js",
+    "generate:favicon": "node generate-favicon.js"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -18,6 +21,9 @@
     "@radix-ui/react-slider": "^1.3.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.6",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
+    "canvas": "^3.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "luaparse": "^0.3.1",
