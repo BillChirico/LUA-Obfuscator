@@ -97,7 +97,9 @@ describe('generateLua', () => {
       const code = generateLua(result.ast);
 
       expect(code).toBeDefined();
-      expect(code).toContain('\\\\'); // Escaped backslash
+      // Check that escape sequences are preserved in the output
+      expect(code).toContain('\\n'); // Newline escape sequence
+      expect(code).toContain('\\t'); // Tab escape sequence
     });
 
     test('should handle empty strings', () => {
