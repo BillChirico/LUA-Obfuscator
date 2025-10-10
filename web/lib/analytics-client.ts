@@ -89,7 +89,7 @@ export async function trackEvent(
  * Convenience wrapper for common obfuscation tracking
  */
 export async function trackObfuscation(params: {
-  obfuscationType: "mangle" | "minify" | "full";
+  obfuscationType: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
   codeSize: number;
   protectionLevel: number;
 }): Promise<void> {

@@ -1,4 +1,4 @@
-# Lua Obfuscator Web Interface
+# Bill's Lua Obfuscator - Web Interface
 
 A modern, production-ready client-side Lua code obfuscator built with Next.js 15, TypeScript, and Monaco Editor. Protect your Lua code with professional obfuscation techniques optimized for game modding and WoW addons.
 
@@ -10,16 +10,19 @@ A modern, production-ready client-side Lua code obfuscator built with Next.js 15
 - **📝 Monaco Editor**: Professional code editor with Lua syntax highlighting and IntelliSense
 - **🎨 Modern UI**: Beautiful gradient interface with smooth transitions and responsive design
 
-### Obfuscation Techniques (MVP)
+### Obfuscation Techniques
 - **Name Mangling**: Replaces variable/function names with hexadecimal identifiers (_0x0000)
+- **String Encoding**: Converts string literals to byte arrays using `string.char()`
 - **Code Minification**: Removes comments, whitespace, and blank lines
 - **Syntax Validation**: Validates Lua code before obfuscation using luaparse
 
 ### User Experience
+- **⚙️ Configurable Settings**: Toggle name mangling, string encoding, and minification
 - **✂️ Copy to Clipboard**: One-click copy with success feedback
 - **💾 Download**: Export obfuscated code as `.lua` file
 - **🚨 Error Handling**: Clear error messages with validation
 - **🎯 Smart Defaults**: Pre-configured with example Lua code
+- **📊 Analytics Integration**: Google Analytics, Vercel Analytics, and Speed Insights
 
 ### Lua Compatibility
 - **Lua 5.1**: Full support (WoW, FiveM, Garry's Mod, etc.)
@@ -73,8 +76,10 @@ web/
 ├── lib/                       # Core obfuscation engine
 │   ├── parser.ts              # Lua syntax validator (luaparse)
 │   ├── generator.ts           # AST to Lua code converter
-│   ├── obfuscator.ts          # Advanced obfuscator (future)
-│   └── obfuscator-simple.ts   # MVP regex-based obfuscator
+│   ├── obfuscator.ts          # Advanced AST-based obfuscator (future)
+│   ├── obfuscator-simple.ts   # Current regex-based obfuscator
+│   ├── analytics-client.ts    # Client-side analytics tracking
+│   └── analytics-server.ts    # Server-side GA4 Measurement Protocol
 ├── types/                     # TypeScript type definitions
 ├── public/                    # Static assets
 └── package.json               # Dependencies and scripts
@@ -110,17 +115,24 @@ web/
    ├─ Parse Lua code with luaparse
    └─ Return syntax errors if invalid
 
-2. Name Mapping
+2. String Encoding (if enabled)
+   ├─ Match all string literals (single and double quoted)
+   ├─ Convert to byte arrays
+   ├─ Handle escape sequences (\n, \t, etc.)
+   └─ Generate string.char() calls
+
+3. Name Mapping (if enabled)
    ├─ Identify all user-defined variables/functions
    ├─ Exclude Lua keywords and built-ins
    └─ Generate hexadecimal identifiers (_0x0000, _0x0001, etc.)
 
-3. Code Transformation
+4. Code Transformation
    ├─ Replace identifiers using word boundaries
-   └─ Apply minification (remove comments, whitespace)
+   └─ Apply minification (remove comments, whitespace) if enabled
 
-4. Output Generation
+5. Output Generation
    ├─ Return obfuscated code
+   ├─ Track analytics event
    └─ Display in Monaco editor
 ```
 
@@ -160,11 +172,17 @@ The obfuscator preserves:
 
 ## 🗺️ Roadmap
 
+### v1.0 - Current Release ✅
+- [x] String encoding using `string.char()` byte arrays
+- [x] Configurable settings (name mangling, string encoding, minification)
+- [x] Configuration panel with toggle controls
+- [x] Analytics integration (GA4, Vercel Analytics, Speed Insights)
+- [x] Professional UI with gradient background
+
 ### v1.1 - Enhanced Obfuscation
-- [ ] String encoding/encryption (Base64, XOR, custom algorithms)
+- [ ] Advanced string encryption (Base64, XOR, custom algorithms)
 - [ ] Number encoding schemes
-- [ ] Configurable obfuscation strength (Low, Medium, High)
-- [ ] Configuration panel with toggle controls
+- [ ] Configurable obfuscation strength slider (Low, Medium, High)
 - [ ] Constant folding/unfolding
 
 ### v1.2 - Advanced Protection
@@ -220,9 +238,17 @@ CMD ["npm", "start"]
 ```
 
 ### Environment Variables
-None required for MVP. Future versions may include:
-- `NEXT_PUBLIC_ANALYTICS_ID`: Analytics tracking
-- `NEXT_PUBLIC_API_URL`: Backend API (if added)
+
+Create a `.env.local` file with:
+
+```bash
+# Google Analytics (required for analytics)
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+GA_MEASUREMENT_PROTOCOL_API_SECRET=your_api_secret
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+```
 
 ## ⚙️ Configuration
 
@@ -239,19 +265,16 @@ None required for MVP. Future versions may include:
 - **Background**: Gradient from `gray-900` to `gray-800`
 - **Fonts**: System fonts + JetBrains Mono for code
 
-## 🐛 Known Limitations (MVP)
+## 🐛 Known Limitations
 
 - **Lua 5.1 Only**: 5.2+ features (goto, _ENV) not fully tested
 - **Regex-Based**: Uses regex instead of full AST transformation (faster, less sophisticated)
-- **Basic Protection**: Advanced techniques (control flow, string encryption) planned for v1.1+
-- **No Configuration**: Obfuscation settings are hardcoded (UI planned for v1.1)
-- **Limited Error Messages**: Improved validation coming in v1.1
+- **Basic Protection**: Advanced techniques (control flow flattening, dead code injection) planned for v1.2+
 
 ### What's NOT Obfuscated
 - Lua keywords and reserved words
 - Standard library functions
 - Global table names (`math`, `string`, etc.)
-- String literals (encryption coming in v1.1)
 - Numeric constants (encoding coming in v1.1)
 
 ## 📄 License

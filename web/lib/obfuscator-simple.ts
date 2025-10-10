@@ -19,7 +19,7 @@ export class LuaObfuscator {
     code: string,
     options: ObfuscationOptions = {
       mangleNames: true,
-      encodeStrings: false, // Disable for MVP
+      encodeStrings: false,
       minify: true,
     }
   ): { success: boolean; code?: string; error?: string } {
@@ -38,6 +38,11 @@ export class LuaObfuscator {
       }
 
       let obfuscatedCode = code;
+
+      // Apply string encoding (before name mangling to avoid encoding mangled names)
+      if (options.encodeStrings) {
+        obfuscatedCode = this.encodeStrings(obfuscatedCode);
+      }
 
       // Apply name mangling
       if (options.mangleNames) {
@@ -104,6 +109,72 @@ export class LuaObfuscator {
     const hex = this.counter.toString(16).padStart(4, "0");
     this.counter++;
     return `_0x${hex}`;
+  }
+
+  private encodeStrings(code: string): string {
+    // Match string literals (both single and double quoted)
+    // This regex handles:
+    // - Double-quoted strings: "..."
+    // - Single-quoted strings: '...'
+    // - Escaped quotes inside strings
+    const stringPattern = /(["'])(?:(?=(\\?))\2.)*?\1/g;
+
+    return code.replace(stringPattern, (match) => {
+      // Extract the string content without quotes
+      const quote = match[0];
+      const content = match.slice(1, -1);
+
+      // Don't encode empty strings
+      if (content.length === 0) {
+        return match;
+      }
+
+      // Convert string to byte array
+      const bytes: number[] = [];
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+
+        // Handle escape sequences
+        if (char === '\\' && i + 1 < content.length) {
+          const nextChar = content[i + 1];
+          switch (nextChar) {
+            case 'n':
+              bytes.push(10); // newline
+              i++;
+              continue;
+            case 't':
+              bytes.push(9); // tab
+              i++;
+              continue;
+            case 'r':
+              bytes.push(13); // carriage return
+              i++;
+              continue;
+            case '\\':
+              bytes.push(92); // backslash
+              i++;
+              continue;
+            case '"':
+              bytes.push(34); // double quote
+              i++;
+              continue;
+            case "'":
+              bytes.push(39); // single quote
+              i++;
+              continue;
+            default:
+              // For other escape sequences, just use the character as-is
+              bytes.push(char.charCodeAt(0));
+              continue;
+          }
+        }
+
+        bytes.push(char.charCodeAt(0));
+      }
+
+      // Generate string.char() call
+      return `string.char(${bytes.join(", ")})`;
+    });
   }
 
   private minify(code: string): string {
