@@ -138,7 +138,7 @@ export class LuaObfuscator {
 			if (node.type === "StringLiteral" && node.raw) {
 				// Extract string value from raw (remove quotes)
 				// node.raw includes quotes, e.g., '"hello"' or "'hello'"
-				const stringValue = node.raw.slice(1, -1); // Remove first and last character (quotes)
+				const stringValue: string = node.raw.slice(1, -1); // Remove first and last character (quotes)
 
 				// Convert to byte array (browser-compatible, no Buffer needed)
 				const bytes = Array.from(stringValue).map((char: string) => char.charCodeAt(0));
