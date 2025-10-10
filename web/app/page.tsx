@@ -11,6 +11,7 @@ import { Copy, Download, Settings, Code, Lock, Shuffle, CheckCircle, AlertCircle
 import { CodeEditor } from "@/components/CodeEditor";
 import { obfuscateLua } from "@/lib/obfuscator-simple";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
+import { trackObfuscation, trackCopy, trackDownload } from "@/lib/analytics-client";
 
 const DEFAULT_LUA_CODE = `-- Example Lua code
 local function greet(name)
@@ -25,6 +26,7 @@ local result = greet(userName)
 
 interface ObfuscatorSettings {
   mangleNames: boolean;
+  encodeStrings: boolean;
   minify: boolean;
   compressionLevel: number;
 }
@@ -38,6 +40,7 @@ export default function Home() {
 
   const [settings, setSettings] = useState<ObfuscatorSettings>({
     mangleNames: true,
+    encodeStrings: true,
     minify: true,
     compressionLevel: 75,
   });
@@ -50,13 +53,31 @@ export default function Home() {
     setTimeout(() => {
       const result = obfuscateLua(inputCode, {
         mangleNames: settings.mangleNames,
-        encodeStrings: false, // Coming in v1.1
+        encodeStrings: settings.encodeStrings,
         minify: settings.minify,
       });
 
       if (result.success && result.code) {
         setOutputCode(result.code);
         setError(null);
+
+        // Track obfuscation event
+        const obfuscationType =
+          settings.mangleNames && settings.encodeStrings && settings.minify
+            ? "full"
+            : settings.mangleNames && settings.encodeStrings
+            ? "mangle_encode"
+            : settings.mangleNames
+            ? "mangle"
+            : settings.encodeStrings
+            ? "encode"
+            : "minify";
+
+        trackObfuscation({
+          obfuscationType,
+          codeSize: inputCode.length,
+          protectionLevel: settings.compressionLevel,
+        }).catch(err => console.error("Analytics tracking failed:", err));
       } else {
         setError(result.error || "Failed to obfuscate code");
         setOutputCode("");
@@ -71,6 +92,9 @@ export default function Home() {
       await navigator.clipboard.writeText(outputCode);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
+
+      // Track copy event
+      trackCopy(outputCode.length).catch(err => console.error("Analytics tracking failed:", err));
     } catch (err) {
       setError("Failed to copy to clipboard");
     }
@@ -84,6 +108,9 @@ export default function Home() {
     a.download = "obfuscated.lua";
     a.click();
     URL.revokeObjectURL(url);
+
+    // Track download event
+    trackDownload(outputCode.length).catch(err => console.error("Analytics tracking failed:", err));
   };
 
   return (
@@ -206,6 +233,20 @@ export default function Home() {
                   </p>
 
                   <div className="flex items-center justify-between pt-2">
+                    <Label htmlFor="encode-strings" className="text-sm text-gray-200">
+                      Encode Strings
+                    </Label>
+                    <Switch
+                      id="encode-strings"
+                      checked={settings.encodeStrings}
+                      onCheckedChange={(checked) => setSettings({ ...settings, encodeStrings: checked })}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 -mt-2">
+                    Convert strings to byte arrays using string.char()
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2">
                     <Label htmlFor="minify" className="text-sm text-gray-200">
                       Minify Code
                     </Label>
@@ -243,10 +284,6 @@ export default function Home() {
                   <Label className="text-sm text-gray-400">Coming in v1.1+</Label>
                   <div className="space-y-3 opacity-50">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">String Encoding</span>
-                      <Switch disabled checked={false} />
-                    </div>
-                    <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-400">Number Encoding</span>
                       <Switch disabled checked={false} />
                     </div>
@@ -261,7 +298,7 @@ export default function Home() {
                 <div className="pt-4 border-t border-white/10">
                   <div className="bg-[#007AFF]/10 border border-[#007AFF]/20 rounded-lg p-4">
                     <p className="text-xs text-blue-200">
-                      <strong>💡 Tip:</strong> Higher protection levels and additional techniques provide better code security. Currently in MVP with basic obfuscation.
+                      <strong>💡 Tip:</strong> Combine name mangling and string encoding for maximum protection. More advanced techniques coming soon!
                     </p>
                   </div>
                 </div>

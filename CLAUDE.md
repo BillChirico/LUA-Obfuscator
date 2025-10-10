@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LUA-Obfuscator is a Lua code obfuscation tool designed to protect Lua source code by transforming it into functionally equivalent but harder-to-read code.
+Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua source code by transforming it into functionally equivalent but harder-to-read code.
 
 ## Architecture
 

@@ -25,7 +25,7 @@ export interface GA4EventParams {
   currency?: string;
 
   // Custom parameters for Lua Obfuscator
-  obfuscation_type?: "mangle" | "minify" | "full";
+  obfuscation_type?: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
   code_size?: number;
   protection_level?: number;
 
@@ -163,7 +163,7 @@ export function generateClientId(): string {
  */
 export async function trackObfuscation(params: {
   clientId: string;
-  obfuscationType: "mangle" | "minify" | "full";
+  obfuscationType: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
   codeSize: number;
   protectionLevel: number;
   userId?: string;

@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 		type: "website",
 		locale: "en_US",
 		url: siteUrl,
-		title: "Lua Obfuscator - Professional Lua Code Protection",
+		title: "Bill's Lua Obfuscator - Professional Lua Code Protection",
 		description:
 			"Free online Lua obfuscator with variable name mangling and code minification. Protect your Lua scripts instantly.",
 		siteName: "Lua Obfuscator",
@@ -98,13 +98,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	return (
 		<html lang="en" className="dark">
 			<head>
+				<GoogleAnalytics />
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{
 						__html: JSON.stringify({
 							"@context": "https://schema.org",
 							"@type": "WebApplication",
-							name: "Lua Obfuscator",
+							name: "Bill's Lua Obfuscator",
 							description: "Professional Lua code protection and obfuscation tool",
 							url: siteUrl,
 							applicationCategory: "DeveloperApplication",
@@ -138,7 +139,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</head>
 			<body className="dark">
 				{children}
-				<GoogleAnalytics />
 				<Analytics />
 				<SpeedInsights />
 			</body>
