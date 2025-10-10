@@ -1,8 +1,10 @@
 {
-  "buildCommand": "cd web && npm run build",
-  "outputDirectory": "web/.next",
-  "devCommand": "cd web && npm run dev",
-  "installCommand": "cd web && npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"]
+    "buildCommand": "npm run build",
+    "outputDirectory": ".next",
+    "devCommand": "npm run dev",
+    "installCommand": "npm install",
+    "framework": "nextjs",
+    "regions": [
+        "iad1"
+    ]
 }
