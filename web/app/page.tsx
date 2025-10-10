@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Download, Lock, AlertCircle, CheckCircle } from "lucide-react";
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Copy, Download, Settings, Code, Lock, Shuffle, CheckCircle, AlertCircle } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import { obfuscateLua } from "@/lib/obfuscator-simple";
+import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
 
 const DEFAULT_LUA_CODE = `-- Example Lua code
 local function greet(name)
@@ -16,6 +23,12 @@ local userName = "World"
 local result = greet(userName)
 `;
 
+interface ObfuscatorSettings {
+  mangleNames: boolean;
+  minify: boolean;
+  compressionLevel: number;
+}
+
 export default function Home() {
   const [inputCode, setInputCode] = useState(DEFAULT_LUA_CODE);
   const [outputCode, setOutputCode] = useState("");
@@ -23,14 +36,23 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const handleObfuscate = () => {
+  const [settings, setSettings] = useState<ObfuscatorSettings>({
+    mangleNames: true,
+    minify: true,
+    compressionLevel: 75,
+  });
+
+  const obfuscateCode = () => {
     setIsProcessing(true);
     setError(null);
     setCopySuccess(false);
 
-    // Run obfuscation asynchronously to avoid blocking UI
     setTimeout(() => {
-      const result = obfuscateLua(inputCode);
+      const result = obfuscateLua(inputCode, {
+        mangleNames: settings.mangleNames,
+        encodeStrings: false, // Coming in v1.1
+        minify: settings.minify,
+      });
 
       if (result.success && result.code) {
         setOutputCode(result.code);
@@ -44,7 +66,7 @@ export default function Home() {
     }, 100);
   };
 
-  const handleCopy = async () => {
+  const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(outputCode);
       setCopySuccess(true);
@@ -54,7 +76,7 @@ export default function Home() {
     }
   };
 
-  const handleDownload = () => {
+  const downloadCode = () => {
     const blob = new Blob([outputCode], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -65,67 +87,185 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="container mx-auto px-4 py-8">
+    <BackgroundGradientAnimation
+      gradientBackgroundStart="rgb(15, 23, 42)"
+      gradientBackgroundEnd="rgb(30, 41, 59)"
+      firstColor="0, 122, 255"
+      secondColor="88, 86, 214"
+      thirdColor="0, 122, 255"
+      fourthColor="88, 86, 214"
+      fifthColor="59, 130, 246"
+      pointerColor="0, 122, 255"
+      containerClassName="h-screen dark"
+    >
+      <div className="absolute inset-0 z-10 flex flex-col p-6 gap-6">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Lock className="w-10 h-10 text-[#007AFF]" />
-            <h1 className="text-4xl font-bold text-white">Lua Obfuscator</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center shadow-lg">
+              <Lock className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Lua Obfuscator</h1>
+              <p className="text-sm text-gray-300">Professional Lua code protection</p>
+            </div>
           </div>
-          <p className="text-gray-400">
-            Protect your Lua code with advanced obfuscation techniques
-          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={copyToClipboard}
+              disabled={!outputCode}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+            >
+              {copySuccess ? (
+                <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+              ) : (
+                <Copy className="w-4 h-4 mr-2" />
+              )}
+              Copy
+            </Button>
+            <Button
+              onClick={downloadCode}
+              disabled={!outputCode}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              onClick={obfuscateCode}
+              disabled={!inputCode || isProcessing}
+              className="bg-gradient-to-r from-[#007AFF] to-[#5856D6] hover:from-[#0066CC] hover:to-[#4644C7] text-white shadow-lg"
+            >
+              <Shuffle className="w-4 h-4 mr-2" />
+              {isProcessing ? "Processing..." : "Obfuscate"}
+            </Button>
+          </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Input Panel */}
-          <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-            <div className="bg-gray-700 px-4 py-3 border-b border-gray-600">
-              <h2 className="text-white font-semibold">Original Code</h2>
-            </div>
-            <div className="h-[500px]">
-              <CodeEditor value={inputCode} onChange={setInputCode} />
-            </div>
+        <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+          {/* Code Editors */}
+          <div className="col-span-8 flex flex-col gap-4 min-h-0">
+            {/* Input Editor */}
+            <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Code className="w-4 h-4 text-[#007AFF]" />
+                  <h2 className="text-sm font-semibold text-white">Original Lua Code</h2>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0">
+                <CodeEditor value={inputCode} onChange={setInputCode} />
+              </div>
+            </Card>
+
+            {/* Output Editor */}
+            <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-[#5856D6]" />
+                  <h2 className="text-sm font-semibold text-white">Obfuscated Output</h2>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0">
+                <CodeEditor value={outputCode} readOnly />
+              </div>
+            </Card>
           </div>
 
-          {/* Output Panel */}
-          <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-            <div className="bg-gray-700 px-4 py-3 border-b border-gray-600 flex items-center justify-between">
-              <h2 className="text-white font-semibold">Obfuscated Code</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopy}
-                  disabled={!outputCode}
-                  className="p-2 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300 hover:text-white transition-colors flex items-center gap-1"
-                  title="Copy to clipboard"
-                >
-                  {copySuccess ? (
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </button>
-                <button
-                  onClick={handleDownload}
-                  disabled={!outputCode}
-                  className="p-2 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300 hover:text-white transition-colors"
-                  title="Download"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
+          {/* Settings Panel */}
+          <div className="col-span-4 min-h-0 overflow-auto">
+            <Card className="bg-background/40 backdrop-blur-xl border-white/10 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Settings className="w-5 h-5 text-[#007AFF]" />
+                <h2 className="text-lg font-semibold text-white">Obfuscation Settings</h2>
               </div>
-            </div>
-            <div className="h-[500px]">
-              <CodeEditor value={outputCode} readOnly />
-            </div>
+
+              <div className="space-y-6">
+                {/* Toggle Settings */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="mangle-names" className="text-sm text-gray-200">
+                      Mangle Names
+                    </Label>
+                    <Switch
+                      id="mangle-names"
+                      checked={settings.mangleNames}
+                      onCheckedChange={(checked) => setSettings({ ...settings, mangleNames: checked })}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 -mt-2">
+                    Replace variable and function names with hexadecimal identifiers
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <Label htmlFor="minify" className="text-sm text-gray-200">
+                      Minify Code
+                    </Label>
+                    <Switch
+                      id="minify"
+                      checked={settings.minify}
+                      onCheckedChange={(checked) => setSettings({ ...settings, minify: checked })}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 -mt-2">
+                    Remove comments and whitespace
+                  </p>
+                </div>
+
+                {/* Compression Slider - Disabled until v1.1 */}
+                <div className="space-y-3 pt-4 border-t border-white/10 opacity-50">
+                  <Label htmlFor="compression" className="text-sm text-gray-400">
+                    Protection Level: {settings.compressionLevel}%
+                  </Label>
+                  <Slider
+                    id="compression"
+                    value={[settings.compressionLevel]}
+                    disabled
+                    max={100}
+                    step={1}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-400">
+                    Coming in v1.1 - adjustable protection strength
+                  </p>
+                </div>
+
+                {/* Coming Soon */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <Label className="text-sm text-gray-400">Coming in v1.1+</Label>
+                  <div className="space-y-3 opacity-50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">String Encoding</span>
+                      <Switch disabled checked={false} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Number Encoding</span>
+                      <Switch disabled checked={false} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Control Flow</span>
+                      <Switch disabled checked={false} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="pt-4 border-t border-white/10">
+                  <div className="bg-[#007AFF]/10 border border-[#007AFF]/20 rounded-lg p-4">
+                    <p className="text-xs text-blue-200">
+                      <strong>💡 Tip:</strong> Higher protection levels and additional techniques provide better code security. Currently in MVP with basic obfuscation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-red-900/20 border border-red-500 rounded-lg p-4 flex items-start gap-3">
+          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h3 className="text-red-300 font-semibold mb-1">Error</h3>
@@ -133,18 +273,7 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* Action Button */}
-        <div className="text-center">
-          <button
-            onClick={handleObfuscate}
-            disabled={!inputCode || isProcessing}
-            className="px-8 py-3 bg-[#007AFF] text-white font-semibold rounded-lg hover:bg-[#0066CC] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
-          >
-            {isProcessing ? "Processing..." : "Obfuscate Code"}
-          </button>
-        </div>
       </div>
-    </main>
+    </BackgroundGradientAnimation>
   );
 }
