@@ -1,41 +1,33 @@
-# Compiled Lua sources
-luac.out
+# Dependencies
+/web/node_modules
+/.pnp
+.pnp.js
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+# Testing
+/coverage
 
-# Object files
-*.o
-*.os
-*.ko
-*.obj
-*.elf
+# Next.js
+/web/.next/
+/web/out/
 
-# Precompiled Headers
-*.gch
-*.pch
+# Production
+/build
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-*.def
-*.exp
+# Misc
+.DS_Store
+*.pem
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# Local env files
+.env*.local
 
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+/web/next-env.d.ts
