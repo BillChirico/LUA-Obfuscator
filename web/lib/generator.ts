@@ -48,6 +48,9 @@ function generateNode(node: any): string {
     case "BinaryExpression":
       return generateBinaryExpression(node);
 
+    case "LogicalExpression":
+      return generateBinaryExpression(node); // Logical expressions have same structure as binary
+
     case "UnaryExpression":
       return generateUnaryExpression(node);
 
@@ -110,8 +113,28 @@ function generateAssignmentStatement(node: any): string {
 }
 
 function generateStringLiteral(node: any): string {
-  const delimiter = node.raw?.[0] || '"';
-  const value = node.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  // Handle encoded strings (string obfuscation)
+  if (node.wasEncoded && node.encodedValue && Array.isArray(node.encodedValue) && node.encodedValue.length > 0) {
+    // Generate Lua decoder using string.char
+    // Filters out any null/undefined values and joins byte values
+    const bytes = node.encodedValue.filter((b: any) => b != null && typeof b === 'number').join(', ');
+
+    // Only use encoding if we have valid bytes, otherwise fall back to normal string
+    if (bytes.length > 0) {
+      return `string.char(${bytes})`;
+    }
+  }
+
+  // Handle normal (non-encoded) strings OR fallback if encoding failed
+  // luaparse sets node.value to null, so we need to extract from node.raw
+  if (node.raw) {
+    // Return the raw string as-is (it already includes quotes and escaping)
+    return node.raw;
+  }
+
+  // Fallback for edge cases where raw is not available
+  const delimiter = '"';
+  const value = (node.value || '').replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `${delimiter}${value}${delimiter}`;
 }
 
@@ -142,6 +165,11 @@ function generateBinaryExpression(node: any): string {
 
 function generateUnaryExpression(node: any): string {
   const arg = generateNode(node.argument);
+  // Add space after 'not' operator (word-based operator requires space)
+  if (node.operator === 'not') {
+    return `${node.operator} ${arg}`;
+  }
+  // For other operators like '-', '#', no space needed
   return `${node.operator}${arg}`;
 }
 

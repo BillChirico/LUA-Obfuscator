@@ -135,9 +135,13 @@ export class LuaObfuscator {
 	 */
 	private encodeStrings(ast: any): any {
 		return this.walkAST(ast, (node) => {
-			if (node.type === "StringLiteral" && node.value) {
+			if (node.type === "StringLiteral" && node.raw) {
+				// Extract string value from raw (remove quotes)
+				// node.raw includes quotes, e.g., '"hello"' or "'hello'"
+				const stringValue: string = node.raw.slice(1, -1); // Remove first and last character (quotes)
+
 				// Convert to byte array (browser-compatible, no Buffer needed)
-				const bytes = Array.from(node.value as string).map((char: string) => char.charCodeAt(0));
+				const bytes = Array.from(stringValue).map((char: string) => char.charCodeAt(0));
 
 				node.encodedValue = bytes;
 				node.wasEncoded = true;
@@ -151,9 +155,62 @@ export class LuaObfuscator {
 	 * Removes unnecessary whitespace and comments
 	 */
 	private minify(code: string): string {
-		// Remove comments
-		code = code.replace(/--\[\[[\s\S]*?\]\]/g, ""); // Multi-line comments
-		code = code.replace(/--[^\n]*/g, ""); // Single-line comments
+		// Remove comments (but preserve string content)
+		// Split by strings to avoid removing comment-like content inside strings
+		const parts: string[] = [];
+		let inString = false;
+		let stringChar = '';
+		let current = '';
+
+		for (let i = 0; i < code.length; i++) {
+			const char = code[i];
+			const prevChar = i > 0 ? code[i - 1] : '';
+
+			// Track string boundaries
+			if ((char === '"' || char === "'") && prevChar !== '\\') {
+				if (!inString) {
+					// Starting a string
+					inString = true;
+					stringChar = char;
+				} else if (char === stringChar) {
+					// Ending a string
+					inString = false;
+					stringChar = '';
+				}
+			}
+
+			current += char;
+
+			// If we're at the start of a comment (outside strings), process accumulated code
+			if (!inString && char === '-' && i + 1 < code.length && code[i + 1] === '-') {
+				// Remove the current part's trailing '--'
+				current = current.slice(0, -1);
+				parts.push(current);
+
+				// Skip the comment
+				if (i + 3 < code.length && code[i + 2] === '[' && code[i + 3] === '[') {
+					// Multi-line comment
+					i += 4;
+					while (i < code.length - 1) {
+						if (code[i] === ']' && code[i + 1] === ']') {
+							i += 2;
+							break;
+						}
+						i++;
+					}
+					i--; // Adjust because loop will increment
+				} else {
+					// Single-line comment
+					while (i < code.length && code[i] !== '\n') {
+						i++;
+					}
+				}
+				current = '';
+			}
+		}
+
+		parts.push(current);
+		code = parts.join('');
 
 		// Remove excessive whitespace
 		code = code.replace(/\n\s*\n/g, "\n"); // Multiple blank lines
