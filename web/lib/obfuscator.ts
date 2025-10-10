@@ -137,7 +137,7 @@ export class LuaObfuscator {
     return this.walkAST(ast, (node) => {
       if (node.type === "StringLiteral" && node.value) {
         // Convert to byte array (browser-compatible, no Buffer needed)
-        const bytes = Array.from(node.value).map((char) =>
+        const bytes = Array.from(node.value as string).map((char: string) =>
           char.charCodeAt(0)
         );
 
