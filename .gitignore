@@ -31,3 +31,4 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 /web/next-env.d.ts
+/web/lib/luaparse.d.ts
