@@ -79,6 +79,20 @@ Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua sou
 
 ## Development Workflow
 
+### File Creation Guidelines
+**IMPORTANT: Minimize file creation**
+- **NEVER** create markdown (.md) files unless absolutely necessary
+- **NEVER** create documentation files proactively
+- Only create files when explicitly requested by the user
+- Prefer editing existing files over creating new ones
+- Exception: Core implementation files (code, tests, configs) that are required for functionality
+
+**When documenting work:**
+- Provide documentation inline in responses to the user
+- Use code comments for implementation notes
+- Update existing README.md if documentation is truly needed
+- Ask user first before creating any new documentation files
+
 ### Testing Strategy
 - Unit tests for individual transformation passes
 - Integration tests with real Lua scripts

@@ -8,7 +8,10 @@ import { parseLua } from "./parser";
 export interface ObfuscationOptions {
   mangleNames?: boolean;
   encodeStrings?: boolean;
+  encodeNumbers?: boolean;
+  controlFlow?: boolean;
   minify?: boolean;
+  protectionLevel?: number;
 }
 
 export class LuaObfuscator {
@@ -20,7 +23,10 @@ export class LuaObfuscator {
     options: ObfuscationOptions = {
       mangleNames: true,
       encodeStrings: false,
+      encodeNumbers: false,
+      controlFlow: false,
       minify: true,
+      protectionLevel: 50,
     }
   ): { success: boolean; code?: string; error?: string } {
     try {
@@ -38,6 +44,18 @@ export class LuaObfuscator {
       }
 
       let obfuscatedCode = code;
+
+      const protectionLevel = options.protectionLevel ?? 50;
+
+      // Apply number encoding (before other transformations)
+      if (options.encodeNumbers) {
+        obfuscatedCode = this.encodeNumbers(obfuscatedCode, protectionLevel);
+      }
+
+      // Apply control flow obfuscation
+      if (options.controlFlow) {
+        obfuscatedCode = this.obfuscateControlFlow(obfuscatedCode, protectionLevel);
+      }
 
       // Apply string encoding (before name mangling to avoid encoding mangled names)
       if (options.encodeStrings) {
@@ -109,6 +127,114 @@ export class LuaObfuscator {
     const hex = this.counter.toString(16).padStart(4, "0");
     this.counter++;
     return `_0x${hex}`;
+  }
+
+  private encodeNumbers(code: string, protectionLevel: number): string {
+    // Match numeric literals (integers and decimals)
+    // Negative lookbehind/lookahead to avoid matching parts of identifiers or hex numbers
+    const numberPattern = /(?<![a-zA-Z0-9_])(\d+(?:\.\d+)?)(?![a-zA-Z0-9_])/g;
+
+    return code.replace(numberPattern, (match) => {
+      const num = parseFloat(match);
+
+      // Skip very small numbers (0-3) as encoding them is counterproductive
+      if (num >= 0 && num <= 3) {
+        return match;
+      }
+
+      // Protection level controls encoding probability (0-100%)
+      // 0% = no encoding, 100% = encode all numbers
+      const shouldEncode = Math.random() * 100 < protectionLevel;
+      if (!shouldEncode) {
+        return match;
+      }
+
+      // Use various encoding strategies randomly
+      const strategy = Math.floor(Math.random() * 4);
+
+      switch (strategy) {
+        case 0: {
+          // Strategy 1: Split and add (e.g., 100 becomes 50 + 50)
+          const half = Math.floor(num / 2);
+          const remainder = num - half;
+          return `(${half} + ${remainder})`;
+        }
+        case 1: {
+          // Strategy 2: Multiply and divide (e.g., 100 becomes 200 / 2)
+          const multiplier = 2 + Math.floor(Math.random() * 3); // 2-4
+          return `(${num * multiplier} / ${multiplier})`;
+        }
+        case 2: {
+          // Strategy 3: Add and subtract (e.g., 100 becomes 150 - 50)
+          const offset = 10 + Math.floor(Math.random() * 90); // 10-99
+          return `(${num + offset} - ${offset})`;
+        }
+        case 3: {
+          // Strategy 4: Bitwise XOR (e.g., 100 becomes 173 ^ 205)
+          // Only for integers
+          if (Number.isInteger(num)) {
+            const xorKey = Math.floor(Math.random() * 256);
+            return `(${(num ^ xorKey)} ~ ${xorKey})`;
+          }
+          // Fallback to strategy 0 for decimals
+          const half = Math.floor(num / 2);
+          const remainder = num - half;
+          return `(${half} + ${remainder})`;
+        }
+        default:
+          return match;
+      }
+    });
+  }
+
+  private obfuscateControlFlow(code: string, protectionLevel: number): string {
+    // Add opaque predicates to if statements
+    // Match: if <condition> then
+    const ifPattern = /\bif\s+(.+?)\s+then\b/g;
+    code = code.replace(ifPattern, (match, condition) => {
+      // Protection level controls obfuscation probability (0-100%)
+      const shouldObfuscate = Math.random() * 100 < protectionLevel;
+      if (!shouldObfuscate) {
+        return match;
+      }
+
+      const opaquePredicates = [
+        "(1 + 1 == 2)",
+        "(2 * 3 > 5)",
+        "(10 - 5 == 5)",
+        "(true or false)",
+      ];
+      const opaque = opaquePredicates[Math.floor(Math.random() * opaquePredicates.length)];
+      return `if ${opaque} and ${condition} then`;
+    });
+
+    // Add opaque predicates to while statements
+    // Match: while <condition> do
+    const whilePattern = /\bwhile\s+(.+?)\s+do\b/g;
+    code = code.replace(whilePattern, (match, condition) => {
+      const shouldObfuscate = Math.random() * 100 < protectionLevel;
+      if (!shouldObfuscate) {
+        return match;
+      }
+
+      const opaque = "(1 * 1 >= 0)";
+      return `while ${opaque} and ${condition} do`;
+    });
+
+    // Add opaque predicates to repeat-until statements
+    // Match: until <condition>
+    const untilPattern = /\buntil\s+(.+?)(?=\n|$)/g;
+    code = code.replace(untilPattern, (match, condition) => {
+      const shouldObfuscate = Math.random() * 100 < protectionLevel;
+      if (!shouldObfuscate) {
+        return match;
+      }
+
+      const opaque = "(1 == 1)";
+      return `until ${opaque} and ${condition}`;
+    });
+
+    return code;
   }
 
   private encodeStrings(code: string): string {
