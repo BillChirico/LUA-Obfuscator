@@ -12,7 +12,10 @@ import { generateLua } from "./generator";
 export interface ObfuscationOptions {
 	mangleNames?: boolean;
 	encodeStrings?: boolean;
+	encodeNumbers?: boolean;
+	controlFlow?: boolean;
 	minify?: boolean;
+	protectionLevel?: number;
 }
 
 export class LuaObfuscator {
@@ -27,7 +30,10 @@ export class LuaObfuscator {
 		options: ObfuscationOptions = {
 			mangleNames: true,
 			encodeStrings: true,
+			encodeNumbers: false,
+			controlFlow: false,
 			minify: true,
+			protectionLevel: 50,
 		}
 	): { success: boolean; code?: string; error?: string } {
 		try {
@@ -46,6 +52,8 @@ export class LuaObfuscator {
 
 			let ast = parseResult.ast;
 
+			const protectionLevel = options.protectionLevel ?? 50;
+
 			// Apply transformations
 			if (options.mangleNames) {
 				ast = this.mangleNames(ast);
@@ -53,6 +61,14 @@ export class LuaObfuscator {
 
 			if (options.encodeStrings) {
 				ast = this.encodeStrings(ast);
+			}
+
+			if (options.encodeNumbers) {
+				ast = this.encodeNumbers(ast, protectionLevel);
+			}
+
+			if (options.controlFlow) {
+				ast = this.obfuscateControlFlow(ast, protectionLevel);
 			}
 
 			// Generate code from AST
@@ -220,6 +236,199 @@ export class LuaObfuscator {
 		code = code.replace(/\n+/g, " ");
 
 		return code.trim();
+	}
+
+	/**
+	 * Technique 4: Number encoding
+	 * Encodes numeric literals using mathematical expressions to obscure values
+	 */
+	private encodeNumbers(ast: any, protectionLevel: number): any {
+		return this.walkAST(ast, (node) => {
+			if (node.type === "NumericLiteral" && typeof node.value === "number") {
+				// Skip very small numbers (0-3) as encoding them is often counterproductive
+				if (node.value >= 0 && node.value <= 3) {
+					return node;
+				}
+
+				// Protection level controls encoding probability (0-100%)
+				const shouldEncode = Math.random() * 100 < protectionLevel;
+				if (!shouldEncode) {
+					return node;
+				}
+
+				// Use various encoding strategies
+				const strategy = Math.floor(Math.random() * 4);
+
+				switch (strategy) {
+					case 0: {
+						// Strategy 1: Split and add (e.g., 100 becomes 50 + 50)
+						const half = Math.floor(node.value / 2);
+						const remainder = node.value - half;
+						node.encodedExpression = {
+							type: "BinaryExpression",
+							operator: "+",
+							left: { type: "NumericLiteral", value: half },
+							right: { type: "NumericLiteral", value: remainder }
+						};
+						node.wasEncoded = true;
+						break;
+					}
+					case 1: {
+						// Strategy 2: Multiply and divide (e.g., 100 becomes 200 / 2)
+						const multiplier = 2 + Math.floor(Math.random() * 3); // 2-4
+						node.encodedExpression = {
+							type: "BinaryExpression",
+							operator: "/",
+							left: { type: "NumericLiteral", value: node.value * multiplier },
+							right: { type: "NumericLiteral", value: multiplier }
+						};
+						node.wasEncoded = true;
+						break;
+					}
+					case 2: {
+						// Strategy 3: Add and subtract (e.g., 100 becomes 150 - 50)
+						const offset = 10 + Math.floor(Math.random() * 90); // 10-99
+						node.encodedExpression = {
+							type: "BinaryExpression",
+							operator: "-",
+							left: { type: "NumericLiteral", value: node.value + offset },
+							right: { type: "NumericLiteral", value: offset }
+						};
+						node.wasEncoded = true;
+						break;
+					}
+					case 3: {
+						// Strategy 4: Bitwise XOR (e.g., 100 becomes 173 ^ 205)
+						const xorKey = Math.floor(Math.random() * 256);
+						node.encodedExpression = {
+							type: "BinaryExpression",
+							operator: "^",
+							left: { type: "NumericLiteral", value: node.value ^ xorKey },
+							right: { type: "NumericLiteral", value: xorKey }
+						};
+						node.wasEncoded = true;
+						break;
+					}
+				}
+			}
+			return node;
+		});
+	}
+
+	/**
+	 * Technique 5: Control flow obfuscation
+	 * Adds opaque predicates and complicates control flow to make analysis harder
+	 */
+	private obfuscateControlFlow(ast: any, protectionLevel: number): any {
+		return this.walkAST(ast, (node) => {
+			// Wrap if statements with opaque predicates
+			if (node.type === "IfStatement" && node.clauses && node.clauses.length > 0) {
+				// Protection level controls obfuscation probability (0-100%)
+				const shouldObfuscate = Math.random() * 100 < protectionLevel;
+				if (!shouldObfuscate) {
+					return node;
+				}
+
+				// Create an opaque predicate (always true but hard to analyze)
+				// e.g., (x * x >= 0) or (x == x)
+				const opaquePredicateType = Math.floor(Math.random() * 3);
+				let opaquePredicate;
+
+				switch (opaquePredicateType) {
+					case 0: {
+						// Always true: (1 + 1 == 2)
+						opaquePredicate = {
+							type: "BinaryExpression",
+							operator: "==",
+							left: {
+								type: "BinaryExpression",
+								operator: "+",
+								left: { type: "NumericLiteral", value: 1 },
+								right: { type: "NumericLiteral", value: 1 }
+							},
+							right: { type: "NumericLiteral", value: 2 }
+						};
+						break;
+					}
+					case 1: {
+						// Always true: (2 * 3 > 5)
+						opaquePredicate = {
+							type: "BinaryExpression",
+							operator: ">",
+							left: {
+								type: "BinaryExpression",
+								operator: "*",
+								left: { type: "NumericLiteral", value: 2 },
+								right: { type: "NumericLiteral", value: 3 }
+							},
+							right: { type: "NumericLiteral", value: 5 }
+						};
+						break;
+					}
+					case 2: {
+						// Always true: (10 - 5 == 5)
+						opaquePredicate = {
+							type: "BinaryExpression",
+							operator: "==",
+							left: {
+								type: "BinaryExpression",
+								operator: "-",
+								left: { type: "NumericLiteral", value: 10 },
+								right: { type: "NumericLiteral", value: 5 }
+							},
+							right: { type: "NumericLiteral", value: 5 }
+						};
+						break;
+					}
+					default:
+						opaquePredicate = null;
+				}
+
+				if (opaquePredicate) {
+					// Wrap the original condition with the opaque predicate using 'and'
+					const originalCondition = node.clauses[0].condition;
+					node.clauses[0].condition = {
+						type: "LogicalExpression",
+						operator: "and",
+						left: opaquePredicate,
+						right: originalCondition
+					};
+					node.wasObfuscated = true;
+				}
+			}
+
+			// Add opaque predicates to while loops
+			if (node.type === "WhileStatement" && node.condition) {
+				const shouldObfuscate = Math.random() * 100 < protectionLevel;
+				if (!shouldObfuscate) {
+					return node;
+				}
+
+				const opaquePredicate = {
+					type: "BinaryExpression",
+					operator: ">=",
+					left: {
+						type: "BinaryExpression",
+						operator: "*",
+						left: { type: "NumericLiteral", value: 1 },
+						right: { type: "NumericLiteral", value: 1 }
+					},
+					right: { type: "NumericLiteral", value: 0 }
+				};
+
+				// Wrap condition with opaque predicate
+				const originalCondition = node.condition;
+				node.condition = {
+					type: "LogicalExpression",
+					operator: "and",
+					left: opaquePredicate,
+					right: originalCondition
+				};
+				node.wasObfuscated = true;
+			}
+
+			return node;
+		});
 	}
 
 	/**

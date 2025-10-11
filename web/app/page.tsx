@@ -13,20 +13,57 @@ import { obfuscateLua } from "@/lib/obfuscator-simple";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
 import { trackObfuscation, trackCopy, trackDownload } from "@/lib/analytics-client";
 
-const DEFAULT_LUA_CODE = `-- Example Lua code
-local function greet(name)
-  local message = "Hello, " .. name
-  print(message)
-  return message
+const DEFAULT_LUA_CODE = `-- Advanced Lua Example
+-- Demonstrates all obfuscation features
+
+local function calculateScore(basePoints, multiplier, bonus)
+  -- Number encoding will transform these literals
+  local maxScore = 1000
+  local minScore = 100
+
+  -- Control flow obfuscation adds complexity
+  if basePoints > 50 then
+    basePoints = basePoints * multiplier
+  else
+    basePoints = basePoints + bonus
+  end
+
+  -- String encoding protects text
+  local message = "Score calculated: "
+  local result = basePoints
+
+  -- Loop demonstrates control flow
+  local i = 0
+  while i < 3 do
+    result = result + 10
+    i = i + 1
+  end
+
+  -- Clamp result
+  if result > maxScore then
+    result = maxScore
+  elseif result < minScore then
+    result = minScore
+  end
+
+  print(message .. result)
+  return result
 end
 
-local userName = "World"
-local result = greet(userName)
+-- Variables and function calls show name mangling
+local playerScore = 75
+local scoreMultiplier = 2
+local bonusPoints = 25
+
+local finalScore = calculateScore(playerScore, scoreMultiplier, bonusPoints)
+print("Final score: " .. finalScore)
 `;
 
 interface ObfuscatorSettings {
   mangleNames: boolean;
   encodeStrings: boolean;
+  encodeNumbers: boolean;
+  controlFlow: boolean;
   minify: boolean;
   compressionLevel: number;
 }
@@ -39,10 +76,12 @@ export default function Home() {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const [settings, setSettings] = useState<ObfuscatorSettings>({
-    mangleNames: true,
-    encodeStrings: true,
-    minify: true,
-    compressionLevel: 75,
+    mangleNames: false,
+    encodeStrings: false,
+    encodeNumbers: false,
+    controlFlow: false,
+    minify: false,
+    compressionLevel: 0,
   });
 
   const obfuscateCode = () => {
@@ -54,7 +93,10 @@ export default function Home() {
       const result = obfuscateLua(inputCode, {
         mangleNames: settings.mangleNames,
         encodeStrings: settings.encodeStrings,
+        encodeNumbers: settings.encodeNumbers,
+        controlFlow: settings.controlFlow,
         minify: settings.minify,
+        protectionLevel: settings.compressionLevel,
       });
 
       if (result.success && result.code) {
@@ -174,10 +216,10 @@ export default function Home() {
 
         {/* Main Content */}
         <section className="flex-1 grid grid-cols-12 gap-6 min-h-0" aria-label="Code editor workspace">
-          {/* Code Editors */}
-          <div className="col-span-8 flex flex-col gap-4 min-h-0">
+          {/* Code Editors - Side by Side */}
+          <div className="col-span-8 grid grid-cols-2 gap-4 min-h-0">
             {/* Input Editor */}
-            <section aria-labelledby="input-code-heading">
+            <section aria-labelledby="input-code-heading" className="flex flex-col min-h-0">
               <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
@@ -192,7 +234,7 @@ export default function Home() {
             </section>
 
             {/* Output Editor */}
-            <section aria-labelledby="output-code-heading">
+            <section aria-labelledby="output-code-heading" className="flex flex-col min-h-0">
               <Card className="flex-1 bg-background/40 backdrop-blur-xl border-white/10 overflow-hidden flex flex-col min-h-0 p-0 gap-0">
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
@@ -261,36 +303,83 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Compression Slider - Disabled until v1.1 */}
-                <div className="space-y-3 pt-4 border-t border-white/10 opacity-50">
-                  <Label htmlFor="compression" className="text-sm text-gray-400">
+                {/* Advanced Obfuscation */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <Label className="text-sm text-gray-200">Advanced Techniques</Label>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="encode-numbers" className="text-sm text-gray-200">
+                        Encode Numbers
+                      </Label>
+                      <Switch
+                        id="encode-numbers"
+                        checked={settings.encodeNumbers}
+                        onCheckedChange={(checked) => setSettings({ ...settings, encodeNumbers: checked })}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 -mt-2">
+                      Transform numeric literals into mathematical expressions
+                    </p>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <Label htmlFor="control-flow" className="text-sm text-gray-200">
+                        Control Flow
+                      </Label>
+                      <Switch
+                        id="control-flow"
+                        checked={settings.controlFlow}
+                        onCheckedChange={(checked) => setSettings({ ...settings, controlFlow: checked })}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 -mt-2">
+                      Add opaque predicates to complicate control flow analysis
+                    </p>
+                  </div>
+                </div>
+
+                {/* Protection Level Slider */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <Label htmlFor="compression" className="text-sm text-gray-200">
                     Protection Level: {settings.compressionLevel}%
                   </Label>
                   <Slider
                     id="compression"
                     value={[settings.compressionLevel]}
-                    disabled
+                    onValueChange={(value) => {
+                      const level = value[0];
+                      setSettings({
+                        ...settings,
+                        compressionLevel: level,
+                        minify: level >= 10,
+                        mangleNames: level >= 20,
+                        encodeStrings: level >= 40,
+                        encodeNumbers: level >= 60,
+                        controlFlow: level >= 80,
+                      });
+                    }}
                     max={100}
-                    step={1}
+                    step={10}
                     className="w-full"
                   />
-                  <p className="text-xs text-gray-400">
-                    Coming in v1.1 - adjustable protection strength
-                  </p>
-                </div>
-
-                {/* Coming Soon */}
-                <div className="space-y-3 pt-4 border-t border-white/10">
-                  <Label className="text-sm text-gray-400">Coming in v1.1+</Label>
-                  <div className="space-y-3 opacity-50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Number Encoding</span>
-                      <Switch disabled checked={false} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Control Flow</span>
-                      <Switch disabled checked={false} />
-                    </div>
+                  <div className="text-xs text-gray-400">
+                    {settings.compressionLevel === 0 && (
+                      <p>No automatic obfuscation enabled</p>
+                    )}
+                    {settings.compressionLevel >= 10 && settings.compressionLevel < 20 && (
+                      <p><strong className="text-blue-300">Active:</strong> Minify</p>
+                    )}
+                    {settings.compressionLevel >= 20 && settings.compressionLevel < 40 && (
+                      <p><strong className="text-blue-300">Active:</strong> Minify, Mangle Names</p>
+                    )}
+                    {settings.compressionLevel >= 40 && settings.compressionLevel < 60 && (
+                      <p><strong className="text-blue-300">Active:</strong> Minify, Mangle Names, Encode Strings</p>
+                    )}
+                    {settings.compressionLevel >= 60 && settings.compressionLevel < 80 && (
+                      <p><strong className="text-blue-300">Active:</strong> Minify, Mangle Names, Encode Strings, Encode Numbers ({settings.compressionLevel}%)</p>
+                    )}
+                    {settings.compressionLevel >= 80 && (
+                      <p><strong className="text-blue-300">Active:</strong> All techniques enabled ({settings.compressionLevel}% intensity)</p>
+                    )}
                   </div>
                 </div>
 
@@ -298,7 +387,7 @@ export default function Home() {
                 <div className="pt-4 border-t border-white/10">
                   <div className="bg-[#007AFF]/10 border border-[#007AFF]/20 rounded-lg p-4">
                     <p className="text-xs text-blue-200">
-                      <strong>💡 Tip:</strong> Combine name mangling and string encoding for maximum protection. More advanced techniques coming soon!
+                      <strong>💡 Tip:</strong> Use the Protection Level slider for quick presets, or manually toggle individual techniques for fine-grained control. Higher protection levels provide stronger obfuscation but may impact performance.
                     </p>
                   </div>
                 </div>

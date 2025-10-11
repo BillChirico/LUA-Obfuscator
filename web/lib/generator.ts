@@ -25,7 +25,7 @@ function generateNode(node: any): string {
       return node.name;
 
     case "NumericLiteral":
-      return String(node.value);
+      return generateNumericLiteral(node);
 
     case "StringLiteral":
       return generateStringLiteral(node);
@@ -110,6 +110,17 @@ function generateAssignmentStatement(node: any): string {
   const vars = node.variables.map(generateNode).join(", ");
   const init = node.init.map(generateNode).join(", ");
   return `${vars} = ${init}`;
+}
+
+function generateNumericLiteral(node: any): string {
+  // Handle encoded numbers (number obfuscation)
+  if (node.wasEncoded && node.encodedExpression) {
+    // Generate the mathematical expression
+    return `(${generateNode(node.encodedExpression)})`;
+  }
+
+  // Handle normal (non-encoded) numbers
+  return String(node.value);
 }
 
 function generateStringLiteral(node: any): string {
