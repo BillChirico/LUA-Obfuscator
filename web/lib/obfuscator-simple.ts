@@ -1,4 +1,9 @@
 import { parseLua, ParseError } from "./parser";
+import { encryptString, generateDecryptorCode, type EncryptionAlgorithm } from "./encryption";
+import { injectDeadCode } from "./dead-code";
+import { injectAntiDebugChecks } from "./anti-debug";
+import { formatCode, type FormattingStyle, type IndentChar } from "./formatter";
+import { calculateMetrics, MetricsTracker, type ObfuscationMetrics, type TransformationCounts } from "./metrics";
 
 /**
  * Simplified Lua Obfuscator for MVP
@@ -6,12 +11,22 @@ import { parseLua, ParseError } from "./parser";
  */
 
 export interface ObfuscationOptions {
+	// Basic options (v1.0)
 	mangleNames?: boolean;
 	encodeStrings?: boolean;
 	encodeNumbers?: boolean;
 	controlFlow?: boolean;
 	minify?: boolean;
 	protectionLevel?: number;
+
+	// Advanced options (v1.1)
+	encryptionAlgorithm?: EncryptionAlgorithm;
+	controlFlowFlattening?: boolean;
+	deadCodeInjection?: boolean;
+	antiDebugging?: boolean;
+	formattingStyle?: FormattingStyle;
+	indentSize?: number;
+	indentChar?: IndentChar;
 }
 
 export interface ObfuscationResult {
@@ -19,11 +34,13 @@ export interface ObfuscationResult {
 	code?: string;
 	error?: string;
 	errorDetails?: ParseError;
+	metrics?: ObfuscationMetrics;
 }
 
 export class LuaObfuscator {
 	private nameMap = new Map<string, string>();
 	private counter = 0;
+	private metricsTracker = new MetricsTracker();
 
 	obfuscate(
 		code: string,
@@ -36,10 +53,13 @@ export class LuaObfuscator {
 			protectionLevel: 50,
 		}
 	): ObfuscationResult {
+		const startTime = Date.now();
+
 		try {
 			// Reset state
 			this.nameMap.clear();
 			this.counter = 0;
+			this.metricsTracker.reset();
 
 			// Validate it's valid Lua first
 			const parseResult = parseLua(code);
@@ -54,6 +74,21 @@ export class LuaObfuscator {
 			let obfuscatedCode = code;
 
 			const protectionLevel = options.protectionLevel ?? 50;
+			const encryptionAlgorithm = options.encryptionAlgorithm || "none";
+
+			// Apply anti-debugging measures (at the beginning)
+			if (options.antiDebugging) {
+				obfuscatedCode = injectAntiDebugChecks(obfuscatedCode, protectionLevel, ["debug", "environment"]);
+				this.metricsTracker.incrementAntiDebugChecks(2); // Debug + environment checks
+			}
+
+			// Apply dead code injection (early, to confuse analysis)
+			if (options.deadCodeInjection) {
+				const linesBefore = obfuscatedCode.split("\n").length;
+				obfuscatedCode = injectDeadCode(obfuscatedCode, protectionLevel / 2); // Less aggressive
+				const linesAfter = obfuscatedCode.split("\n").length;
+				this.metricsTracker.incrementDeadCodeBlocks(linesAfter - linesBefore);
+			}
 
 			// Apply number encoding (before other transformations)
 			if (options.encodeNumbers) {
@@ -65,9 +100,13 @@ export class LuaObfuscator {
 				obfuscatedCode = this.obfuscateControlFlow(obfuscatedCode, protectionLevel);
 			}
 
-			// Apply string encoding (before name mangling to avoid encoding mangled names)
+			// Apply string encoding/encryption (before name mangling to avoid encoding mangled names)
 			if (options.encodeStrings) {
-				obfuscatedCode = this.encodeStrings(obfuscatedCode);
+				if (encryptionAlgorithm !== "none") {
+					obfuscatedCode = this.encodeStringsWithEncryption(obfuscatedCode, encryptionAlgorithm);
+				} else {
+					obfuscatedCode = this.encodeStrings(obfuscatedCode);
+				}
 			}
 
 			// Apply name mangling
@@ -75,12 +114,29 @@ export class LuaObfuscator {
 				obfuscatedCode = this.mangleNamesRegex(obfuscatedCode);
 			}
 
-			// Apply minification
-			if (options.minify) {
+			// Apply formatting/minification
+			if (options.formattingStyle) {
+				obfuscatedCode = formatCode(obfuscatedCode, {
+					style: options.formattingStyle,
+					indentSize: options.indentSize,
+					indentChar: options.indentChar,
+				});
+			} else if (options.minify) {
 				obfuscatedCode = this.minify(obfuscatedCode);
 			}
 
-			return { success: true, code: obfuscatedCode };
+			// Calculate metrics
+			const duration = Date.now() - startTime;
+			const metrics = calculateMetrics(
+				code,
+				obfuscatedCode,
+				this.metricsTracker.getCounts(),
+				duration,
+				encryptionAlgorithm,
+				"client"
+			);
+
+			return { success: true, code: obfuscatedCode, metrics };
 		} catch (error: any) {
 			return {
 				success: false,
@@ -198,6 +254,7 @@ export class LuaObfuscator {
 		identifiers.forEach(name => {
 			if (!this.nameMap.has(name)) {
 				this.nameMap.set(name, this.generateMangledName());
+				this.metricsTracker.incrementNamesMangled();
 			}
 		});
 
@@ -222,8 +279,9 @@ export class LuaObfuscator {
 		// Match numeric literals (integers and decimals)
 		// Negative lookbehind/lookahead to avoid matching parts of identifiers or hex numbers
 		const numberPattern = /(?<![a-zA-Z0-9_])(\d+(?:\.\d+)?)(?![a-zA-Z0-9_])/g;
+		let encodedCount = 0;
 
-		return code.replace(numberPattern, match => {
+		const result = code.replace(numberPattern, match => {
 			const num = parseFloat(match);
 
 			// Skip very small numbers (0-3) as encoding them is counterproductive
@@ -245,6 +303,8 @@ export class LuaObfuscator {
 			if (!shouldEncode) {
 				return match;
 			}
+
+			encodedCount++;
 
 			// Use various encoding strategies randomly
 			// Note: Using only arithmetic operations for Lua 5.1/5.2 compatibility
@@ -279,6 +339,9 @@ export class LuaObfuscator {
 					return match;
 			}
 		});
+
+		this.metricsTracker.incrementNumbersEncoded(encodedCount);
+		return result;
 	}
 
 	private obfuscateControlFlow(code: string, protectionLevel: number): string {
@@ -336,8 +399,9 @@ export class LuaObfuscator {
 		// - Single-quoted strings: '...'
 		// - Escaped quotes inside strings
 		const stringPattern = /(["'])(?:(?=(\\?))\2.)*?\1/g;
+		let encodedCount = 0;
 
-		return code.replace(stringPattern, match => {
+		const result = code.replace(stringPattern, match => {
 			// Extract the string content without quotes
 			const quote = match[0];
 			const content = match.slice(1, -1);
@@ -346,6 +410,8 @@ export class LuaObfuscator {
 			if (content.length === 0) {
 				return match;
 			}
+
+			encodedCount++;
 
 			// Convert string to byte array
 			const bytes: number[] = [];
@@ -393,6 +459,38 @@ export class LuaObfuscator {
 			// Generate string.char() call
 			return `string.char(${bytes.join(", ")})`;
 		});
+
+		this.metricsTracker.incrementStringsEncoded(encodedCount);
+		return result;
+	}
+
+	/**
+	 * Encode strings using custom encryption algorithms
+	 */
+	private encodeStringsWithEncryption(code: string, algorithm: EncryptionAlgorithm): string {
+		const stringPattern = /(["'])(?:(?=(\\?))\2.)*?\1/g;
+		let encodedCount = 0;
+
+		const result = code.replace(stringPattern, match => {
+			// Extract the string content without quotes
+			const content = match.slice(1, -1);
+
+			// Don't encode empty strings
+			if (content.length === 0) {
+				return match;
+			}
+
+			encodedCount++;
+
+			// Encrypt the string
+			const encrypted = encryptString(content, algorithm);
+
+			// Generate the decryption code
+			return generateDecryptorCode(encrypted);
+		});
+
+		this.metricsTracker.incrementStringsEncoded(encodedCount);
+		return result;
 	}
 
 	private minify(code: string): string {
