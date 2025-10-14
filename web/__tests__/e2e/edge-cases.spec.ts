@@ -39,20 +39,30 @@ return emoji`;
 	});
 
 	test("should handle very long single line", async ({ page }) => {
-		const { monaco, ui } = createHelpers(page);
+		const { ui } = createHelpers(page);
 
-		// Create a very long single line
+		// Create a very long single line (100 additions)
 		const longLine = "local x = " + Array(100).fill("1").join(" + ");
 
-		await monaco.setInputCode(longLine);
+		// Use evaluate to set editor content directly (faster than typing)
+		await page.evaluate((code) => {
+			const editor = (window as any).monaco?.editor?.getModels()?.[0];
+			if (editor) {
+				editor.setValue(code);
+			}
+		}, longLine);
+
+		await page.waitForTimeout(500); // Wait for editor to update
+
 		await ui.clickObfuscateComplex();
 		await page.waitForTimeout(3000); // Longer wait for complex operation
 
-		const output = await monaco.getEditorContent(1);
+		// Get output content directly
+		const output = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 		const hasError = await ui.hasError();
 
 		// Either should have output OR an error
-		expect(output.length > 10 || hasError).toBe(true);
+		expect((output && output.length > 10) || hasError).toBe(true);
 	});
 
 	test("should handle deeply nested structures", async ({ page }) => {
