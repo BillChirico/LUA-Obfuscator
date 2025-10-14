@@ -134,11 +134,18 @@ describe("Number Encoding", () => {
 
 		expect(result.success).toBe(true);
 		// At 50%, some numbers should be encoded, some not
-		// Count how many plain numbers remain
-		const plainNumbers = (result.code!.match(/\d{2}/g) || []).length;
-		// Should be between 0 and 20 (not all or none)
-		expect(plainNumbers).toBeGreaterThan(0);
-		expect(plainNumbers).toBeLessThan(20);
+		// Count how many of the ORIGINAL numbers (10-29) remain as standalone literals
+		let plainOriginalNumbers = 0;
+		for (let i = 10; i < 30; i++) {
+			// Check if the number appears as a standalone literal (with word boundaries)
+			const regex = new RegExp(`\\b${i}\\b`);
+			if (regex.test(result.code!)) {
+				plainOriginalNumbers++;
+			}
+		}
+		// Should be between 1 and 19 (not all or none)
+		expect(plainOriginalNumbers).toBeGreaterThan(0);
+		expect(plainOriginalNumbers).toBeLessThan(20);
 	});
 });
 
@@ -309,7 +316,8 @@ describe("Combined Advanced Techniques", () => {
 		// Should be heavily obfuscated
 		expect(result.code).not.toContain("Hello");
 		expect(result.code).not.toContain("msg");
-		expect(result.code).not.toContain(" 10");
+		// Check for standalone 10 literal, not substring (avoid false positives from encoded expressions like "100")
+		expect(result.code).not.toMatch(/\b10\b/);
 	});
 
 	test("should preserve program semantics with advanced obfuscation", () => {

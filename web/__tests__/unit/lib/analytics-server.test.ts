@@ -3,6 +3,13 @@
  * Tests server-side GA4 Measurement Protocol integration
  */
 
+// Set environment variables before importing the module
+process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-TEST123";
+process.env.GA_MEASUREMENT_PROTOCOL_API_SECRET = "test_secret_key";
+
+// Mock fetch globally
+global.fetch = jest.fn() as jest.Mock;
+
 import {
 	sendGA4Event,
 	generateClientId,
@@ -11,24 +18,6 @@ import {
 	trackCopy,
 	type GA4Event,
 } from "@/lib/analytics-server";
-
-// Mock environment variables
-const originalEnv = process.env;
-
-beforeAll(() => {
-	process.env = {
-		...originalEnv,
-		NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TEST123",
-		GA_MEASUREMENT_PROTOCOL_API_SECRET: "test_secret_key",
-	};
-});
-
-afterAll(() => {
-	process.env = originalEnv;
-});
-
-// Mock fetch
-global.fetch = jest.fn();
 
 describe("sendGA4Event", () => {
 	beforeEach(() => {

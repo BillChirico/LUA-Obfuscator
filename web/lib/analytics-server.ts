@@ -11,9 +11,16 @@ import { randomUUID } from "crypto";
 // GA4 Measurement Protocol endpoint
 const GA4_ENDPOINT = "https://www.google-analytics.com/mp/collect";
 
-// Configuration from environment variables
-const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const API_SECRET = process.env.GA_MEASUREMENT_PROTOCOL_API_SECRET;
+/**
+ * Get configuration from environment variables
+ * Loaded lazily to support testing
+ */
+function getConfig() {
+	return {
+		MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+		API_SECRET: process.env.GA_MEASUREMENT_PROTOCOL_API_SECRET,
+	};
+}
 
 /**
  * GA4 Event Parameters
@@ -80,6 +87,9 @@ export async function sendGA4Event(
 	events: GA4Event[],
 	userId?: string
 ): Promise<{ success: boolean; error?: string }> {
+	// Get configuration
+	const { MEASUREMENT_ID, API_SECRET } = getConfig();
+
 	// Validate configuration
 	if (!MEASUREMENT_ID || !API_SECRET) {
 		console.error("[GA4] Missing configuration: MEASUREMENT_ID or API_SECRET");

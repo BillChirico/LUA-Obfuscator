@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Analytics Tracking", () => {
 	test.beforeEach(async ({ page, context }) => {
 		// Mock the analytics API endpoint
-		await page.route("**/api/analytics/track", async (route) => {
+		await page.route("**/api/analytics/track", async route => {
 			await route.fulfill({
 				status: 200,
 				contentType: "application/json",
@@ -23,7 +23,7 @@ test.describe("Analytics Tracking", () => {
 		// Set up request capture
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -44,7 +44,7 @@ test.describe("Analytics Tracking", () => {
 		expect(analyticsRequests.length).toBeGreaterThan(0);
 
 		// Find the obfuscate event
-		const obfuscateEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "obfuscate_code");
+		const obfuscateEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "obfuscate_code");
 
 		expect(obfuscateEvent).toBeTruthy();
 		expect(obfuscateEvent.postData.clientId).toBeTruthy();
@@ -60,7 +60,7 @@ test.describe("Analytics Tracking", () => {
 	test("should track download event when download button is clicked", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -82,7 +82,7 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(300);
 
 		// Verify download event was tracked
-		const downloadEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "download_obfuscated_code");
+		const downloadEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "download_obfuscated_code");
 
 		expect(downloadEvent).toBeTruthy();
 		expect(downloadEvent.postData.events[0].params.code_size).toBeGreaterThan(0);
@@ -94,7 +94,7 @@ test.describe("Analytics Tracking", () => {
 
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -116,7 +116,7 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(300);
 
 		// Verify copy event was tracked
-		const copyEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "copy_obfuscated_code");
+		const copyEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "copy_obfuscated_code");
 
 		expect(copyEvent).toBeTruthy();
 		expect(copyEvent.postData.events[0].params.code_size).toBeGreaterThan(0);
@@ -125,7 +125,7 @@ test.describe("Analytics Tracking", () => {
 	test("should track settings change events", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -139,7 +139,7 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(300);
 
 		// Verify settings change event
-		const settingsEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "change_settings");
+		const settingsEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "change_settings");
 
 		expect(settingsEvent).toBeTruthy();
 		expect(settingsEvent.postData.events[0].params.setting_name).toBeTruthy();
@@ -149,7 +149,7 @@ test.describe("Analytics Tracking", () => {
 	test("should track error event when obfuscation fails", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -170,7 +170,7 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(500);
 
 		// Verify error event was tracked
-		const errorEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "obfuscation_error");
+		const errorEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "obfuscation_error");
 
 		expect(errorEvent).toBeTruthy();
 		expect(errorEvent.postData.events[0].params.error_type).toBeTruthy();
@@ -179,7 +179,7 @@ test.describe("Analytics Tracking", () => {
 	test("should include client ID in all analytics events", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -198,7 +198,7 @@ test.describe("Analytics Tracking", () => {
 		// Verify all requests have client ID
 		expect(analyticsRequests.length).toBeGreaterThan(0);
 
-		const clientIds = analyticsRequests.map((req) => req.postData?.clientId).filter(Boolean);
+		const clientIds = analyticsRequests.map(req => req.postData?.clientId).filter(Boolean);
 
 		expect(clientIds.length).toBe(analyticsRequests.length);
 		expect(new Set(clientIds).size).toBe(1); // All should have same client ID
@@ -207,7 +207,7 @@ test.describe("Analytics Tracking", () => {
 	test("should track protection level changes via slider", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -227,9 +227,9 @@ test.describe("Analytics Tracking", () => {
 
 			// Verify settings change event for protection level
 			const settingsEvent = analyticsRequests.find(
-				(req) =>
+				req =>
 					req.postData?.events?.[0]?.name === "change_settings" &&
-					req.postData?.events?.[0]?.params?.setting_name === "protectionLevel",
+					req.postData?.events?.[0]?.params?.setting_name === "protectionLevel"
 			);
 
 			expect(settingsEvent).toBeTruthy();
@@ -238,7 +238,7 @@ test.describe("Analytics Tracking", () => {
 
 	test("should handle analytics failures gracefully", async ({ page }) => {
 		// Mock API to return error
-		await page.route("**/api/analytics/track", async (route) => {
+		await page.route("**/api/analytics/track", async route => {
 			await route.fulfill({
 				status: 500,
 				contentType: "application/json",
@@ -259,7 +259,7 @@ test.describe("Analytics Tracking", () => {
 	test("should track multiple obfuscation events in a session", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -281,19 +281,19 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(500);
 
 		// Verify multiple obfuscation events were tracked
-		const obfuscateEvents = analyticsRequests.filter((req) => req.postData?.events?.[0]?.name === "obfuscate_code");
+		const obfuscateEvents = analyticsRequests.filter(req => req.postData?.events?.[0]?.name === "obfuscate_code");
 
 		expect(obfuscateEvents.length).toBeGreaterThanOrEqual(2);
 
 		// Verify they have the same client ID
-		const clientIds = obfuscateEvents.map((req) => req.postData.clientId);
+		const clientIds = obfuscateEvents.map(req => req.postData.clientId);
 		expect(new Set(clientIds).size).toBe(1);
 	});
 
 	test("should track obfuscation type based on enabled settings", async ({ page }) => {
 		const analyticsRequests: any[] = [];
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				analyticsRequests.push({
 					url: request.url(),
@@ -315,7 +315,7 @@ test.describe("Analytics Tracking", () => {
 		await page.waitForTimeout(500);
 
 		// Verify obfuscation type reflects enabled settings
-		const obfuscateEvent = analyticsRequests.find((req) => req.postData?.events?.[0]?.name === "obfuscate_code");
+		const obfuscateEvent = analyticsRequests.find(req => req.postData?.events?.[0]?.name === "obfuscate_code");
 
 		expect(obfuscateEvent).toBeTruthy();
 		expect(obfuscateEvent.postData.events[0].params.obfuscation_type).toBeTruthy();
@@ -324,7 +324,7 @@ test.describe("Analytics Tracking", () => {
 	test("should send analytics events with proper content type", async ({ page }) => {
 		let requestHeaders: any = null;
 
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				requestHeaders = request.headers();
 			}
@@ -343,7 +343,7 @@ test.describe("Analytics Tracking", () => {
 		const clientIds: string[] = [];
 
 		// Capture client ID from first session
-		page.on("request", (request) => {
+		page.on("request", request => {
 			if (request.url().includes("/api/analytics/track")) {
 				const postData = request.postDataJSON();
 				if (postData?.clientId) {

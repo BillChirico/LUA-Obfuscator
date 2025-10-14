@@ -16,7 +16,9 @@ test.describe("Advanced Workflows", () => {
 		await monaco.click();
 		await page.keyboard.press("Meta+A");
 		await page.keyboard.press("Backspace");
-		await page.keyboard.type("function fibonacci(n)\n  if n <= 1 then return n end\n  return fibonacci(n-1) + fibonacci(n-2)\nend");
+		await page.keyboard.type(
+			"function fibonacci(n)\n  if n <= 1 then return n end\n  return fibonacci(n-1) + fibonacci(n-2)\nend"
+		);
 
 		const slider = page.locator("#compression");
 		const sliderBox = await slider.boundingBox();
@@ -138,7 +140,7 @@ test.describe("Advanced Workflows", () => {
 		const monaco = page.locator(".monaco-editor").first();
 		await monaco.click();
 		await page.keyboard.press("Meta+A");
-		await page.evaluate((content) => navigator.clipboard.writeText(content), copiedContent);
+		await page.evaluate(content => navigator.clipboard.writeText(content), copiedContent);
 		await page.keyboard.press("Meta+V");
 		await page.waitForTimeout(300);
 
@@ -296,7 +298,7 @@ test.describe("Advanced Workflows", () => {
 		await page.keyboard.press("Backspace");
 
 		// Use evaluate to set editor content directly (faster than typing)
-		await page.evaluate((code) => {
+		await page.evaluate(code => {
 			const editor = (window as any).monaco?.editor?.getModels()?.[0];
 			if (editor) {
 				editor.setValue(code);
@@ -408,7 +410,10 @@ test.describe("Advanced Workflows", () => {
 		expect(afterRefresh).toBeTruthy();
 	});
 
-	test("should support complete workflow: input → settings → obfuscate → copy → download", async ({ page, context }) => {
+	test("should support complete workflow: input → settings → obfuscate → copy → download", async ({
+		page,
+		context,
+	}) => {
 		// Grant permissions
 		await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 

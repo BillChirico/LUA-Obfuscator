@@ -232,7 +232,7 @@ test.describe("Accessibility", () => {
 		await page.waitForTimeout(200);
 
 		// Check for aria-live region or status update
-		const liveRegions = await page.locator('[aria-live]').count();
+		const liveRegions = await page.locator("[aria-live]").count();
 
 		// Should have live regions for dynamic updates
 		expect(liveRegions).toBeGreaterThanOrEqual(0);
