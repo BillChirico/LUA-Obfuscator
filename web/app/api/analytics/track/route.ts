@@ -14,9 +14,9 @@ import { headers } from "next/headers";
  * Request body interface
  */
 interface TrackEventRequest {
-  clientId: string;
-  events: GA4Event[];
-  userId?: string;
+	clientId: string;
+	events: GA4Event[];
+	userId?: string;
 }
 
 /**
@@ -42,71 +42,51 @@ interface TrackEventRequest {
  * ```
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Parse request body
-    const body: TrackEventRequest = await request.json();
+	try {
+		// Parse request body
+		const body: TrackEventRequest = await request.json();
 
-    // Validate required fields
-    if (!body.clientId) {
-      return NextResponse.json(
-        { error: "clientId is required" },
-        { status: 400 }
-      );
-    }
+		// Validate required fields
+		if (!body.clientId) {
+			return NextResponse.json({ error: "clientId is required" }, { status: 400 });
+		}
 
-    if (!body.events || !Array.isArray(body.events) || body.events.length === 0) {
-      return NextResponse.json(
-        { error: "events array is required and must not be empty" },
-        { status: 400 }
-      );
-    }
+		if (!body.events || !Array.isArray(body.events) || body.events.length === 0) {
+			return NextResponse.json({ error: "events array is required and must not be empty" }, { status: 400 });
+		}
 
-    // Validate event names
-    for (const event of body.events) {
-      if (!event.name) {
-        return NextResponse.json(
-          { error: "All events must have a name" },
-          { status: 400 }
-        );
-      }
-    }
+		// Validate event names
+		for (const event of body.events) {
+			if (!event.name) {
+				return NextResponse.json({ error: "All events must have a name" }, { status: 400 });
+			}
+		}
 
-    // Send event to GA4
-    const result = await sendGA4Event(
-      body.clientId,
-      body.events,
-      body.userId
-    );
+		// Send event to GA4
+		const result = await sendGA4Event(body.clientId, body.events, body.userId);
 
-    if (!result.success) {
-      console.error("[API] Failed to send GA4 event:", result.error);
-      return NextResponse.json(
-        { error: "Failed to track event", details: result.error },
-        { status: 500 }
-      );
-    }
+		if (!result.success) {
+			console.error("[API] Failed to send GA4 event:", result.error);
+			return NextResponse.json({ error: "Failed to track event", details: result.error }, { status: 500 });
+		}
 
-    // Return success
-    return NextResponse.json({ success: true });
-
-  } catch (error) {
-    console.error("[API] Error processing track request:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
+		// Return success
+		return NextResponse.json({ success: true });
+	} catch (error) {
+		console.error("[API] Error processing track request:", error);
+		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+	}
 }
 
 /**
  * OPTIONS handler for CORS preflight
  */
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+	return new NextResponse(null, {
+		status: 204,
+		headers: {
+			"Access-Control-Allow-Methods": "POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+		},
+	});
 }

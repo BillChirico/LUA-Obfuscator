@@ -1,0 +1,13 @@
+node_modules
+.next
+dist
+build
+coverage
+playwright-report
+test-results
+*.lock
+package-lock.json
+*.min.js
+*.map
+public
+
