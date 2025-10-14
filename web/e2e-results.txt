@@ -1,4 +1,0 @@
-Error: Project(s) "chromium" not found. Available projects: "Desktop Chrome", "Desktop Firefox", "Desktop Safari", "Mobile Chrome", "Mobile Safari", "iPad"
-    at filterProjects (/Users/billchirico/Developer/LUA-Obfuscator/web/node_modules/playwright/lib/runner/projectUtils.js:80:11)
-    at runTests (/Users/billchirico/Developer/LUA-Obfuscator/web/node_modules/playwright/lib/program.js:217:42)
-    at i.<anonymous> (/Users/billchirico/Developer/LUA-Obfuscator/web/node_modules/playwright/lib/program.js:71:7)
