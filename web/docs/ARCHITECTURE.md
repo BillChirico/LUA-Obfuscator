@@ -20,6 +20,7 @@ Comprehensive system architecture and design patterns for the Lua Obfuscator.
 The Lua Obfuscator is a browser-based web application that transforms Lua source code into functionally equivalent but harder-to-read code using multiple obfuscation techniques.
 
 **Key Characteristics:**
+
 - **Client-Side Processing:** All obfuscation happens in the browser (no server required)
 - **Real-Time Transformation:** 100ms debounced processing for responsive UX
 - **Production-Ready:** Comprehensive test coverage (160+ unit tests, 37+ E2E tests)
@@ -173,15 +174,18 @@ sequenceDiagram
 **Responsibility:** Syntax validation and AST generation
 
 **Key Functions:**
+
 ```typescript
 parseLua(code: string): ParseResult
 validateLua(code: string): boolean
 ```
 
 **Dependencies:**
+
 - `luaparse` - Lua parser library
 
 **Error Handling:**
+
 - Extracts line/column information from parse errors
 - Formats error messages for user display
 - Supports multiple error message formats
@@ -200,20 +204,21 @@ validateLua(code: string): boolean
 
 ```typescript
 class LuaObfuscator {
-  private nameMap: Map<string, string>
-  private counter: number
+	private nameMap: Map<string, string>;
+	private counter: number;
 
-  obfuscate(code: string, options: ObfuscationOptions): ObfuscationResult
-  private mangleNamesRegex(code: string): string
-  private encodeStrings(code: string): string
-  private encodeNumbers(code: string, level: number): string
-  private obfuscateControlFlow(code: string, level: number): string
-  private minify(code: string): string
-  private generateMangledName(): string
+	obfuscate(code: string, options: ObfuscationOptions): ObfuscationResult;
+	private mangleNamesRegex(code: string): string;
+	private encodeStrings(code: string): string;
+	private encodeNumbers(code: string, level: number): string;
+	private obfuscateControlFlow(code: string, level: number): string;
+	private minify(code: string): string;
+	private generateMangledName(): string;
 }
 ```
 
 **Transformation Order:**
+
 1. **Number Encoding** (first to avoid encoding mangled names)
 2. **Control Flow Obfuscation**
 3. **String Encoding**
@@ -221,6 +226,7 @@ class LuaObfuscator {
 5. **Minification** (last to clean up result)
 
 **Protected Names:**
+
 - Lua keywords (`if`, `then`, `else`, `end`, etc.)
 - Standard library (`print`, `pairs`, `math`, `string`, etc.)
 - Library functions (`char`, `byte`, `insert`, `remove`, etc.)
@@ -234,6 +240,7 @@ class LuaObfuscator {
 **Responsibility:** AST to Lua code conversion
 
 **Supported Node Types:**
+
 - Statements: `LocalStatement`, `AssignmentStatement`, `CallStatement`, `ReturnStatement`, `IfStatement`, `WhileStatement`, `RepeatStatement`, `ForNumericStatement`, `ForGenericStatement`, `DoStatement`, `BreakStatement`
 - Expressions: `BinaryExpression`, `LogicalExpression`, `UnaryExpression`, `CallExpression`, `MemberExpression`, `IndexExpression`, `TableConstructorExpression`
 - Literals: `NumericLiteral`, `StringLiteral`, `BooleanLiteral`, `NilLiteral`
@@ -241,6 +248,7 @@ class LuaObfuscator {
 - Identifiers: `Identifier`
 
 **Special Handling:**
+
 - Encoded strings → `string.char(bytes...)`
 - Encoded numbers → mathematical expressions
 - Escaped strings → proper byte conversion
@@ -255,18 +263,20 @@ class LuaObfuscator {
 **Responsibility:** User interface and interaction
 
 **State Management:**
+
 ```typescript
-const [inputCode, setInputCode] = useState<string>()
-const [outputCode, setOutputCode] = useState<string>()
-const [isProcessing, setIsProcessing] = useState<boolean>()
-const [error, setError] = useState<string | null>()
-const [inputError, setInputError] = useState<ParseError | undefined>()
-const [settings, setSettings] = useState<ObfuscatorSettings>()
-const [copySuccess, setCopySuccess] = useState<boolean>()
-const [showSuccessAnimation, setShowSuccessAnimation] = useState<boolean>()
+const [inputCode, setInputCode] = useState<string>();
+const [outputCode, setOutputCode] = useState<string>();
+const [isProcessing, setIsProcessing] = useState<boolean>();
+const [error, setError] = useState<string | null>();
+const [inputError, setInputError] = useState<ParseError | undefined>();
+const [settings, setSettings] = useState<ObfuscatorSettings>();
+const [copySuccess, setCopySuccess] = useState<boolean>();
+const [showSuccessAnimation, setShowSuccessAnimation] = useState<boolean>();
 ```
 
 **Key Features:**
+
 - Real-time obfuscation with 100ms debounce
 - Monaco code editor with Lua syntax highlighting
 - Configuration panel with 5 toggles + protection level slider
@@ -323,49 +333,49 @@ User Action (button click, input change, slider adjust)
 
 ### Frontend Framework
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 15.5.4 | React framework with App Router |
-| React | 19.2.0 | UI library |
-| TypeScript | 5.9.3 | Type safety |
+| Technology | Version | Purpose                         |
+| ---------- | ------- | ------------------------------- |
+| Next.js    | 15.5.4  | React framework with App Router |
+| React      | 19.2.0  | UI library                      |
+| TypeScript | 5.9.3   | Type safety                     |
 
 ### UI Libraries
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| Tailwind CSS | 4.1.14 | Utility-first styling |
-| shadcn/ui | Latest | Pre-built components |
-| Lucide React | 0.545.0 | Icon library |
-| Monaco Editor | 4.7.0 | Code editor |
+| Library       | Version | Purpose               |
+| ------------- | ------- | --------------------- |
+| Tailwind CSS  | 4.1.14  | Utility-first styling |
+| shadcn/ui     | Latest  | Pre-built components  |
+| Lucide React  | 0.545.0 | Icon library          |
+| Monaco Editor | 4.7.0   | Code editor           |
 
 ### Obfuscation
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| luaparse | 0.3.1 | Lua parser |
+| Library  | Version | Purpose    |
+| -------- | ------- | ---------- |
+| luaparse | 0.3.1   | Lua parser |
 
 ### Testing
 
-| Framework | Version | Purpose |
-|-----------|---------|---------|
-| Jest | 29.7.0 | Unit testing |
-| @testing-library/react | 16.1.0 | React testing |
-| Playwright | 1.56.0 | E2E testing |
+| Framework              | Version | Purpose       |
+| ---------------------- | ------- | ------------- |
+| Jest                   | 29.7.0  | Unit testing  |
+| @testing-library/react | 16.1.0  | React testing |
+| Playwright             | 1.56.0  | E2E testing   |
 
 ### Code Quality
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| ESLint | 9.37.0 | Linting |
-| Prettier | Latest | Formatting |
+| Tool     | Version | Purpose    |
+| -------- | ------- | ---------- |
+| ESLint   | 9.37.0  | Linting    |
+| Prettier | Latest  | Formatting |
 
 ### Analytics
 
-| Service | Version | Purpose |
-|---------|---------|---------|
-| Vercel Analytics | 1.5.0 | Page analytics |
-| Vercel Speed Insights | 1.2.0 | Performance monitoring |
-| Google Analytics | Latest | Custom event tracking |
+| Service               | Version | Purpose                |
+| --------------------- | ------- | ---------------------- |
+| Vercel Analytics      | 1.5.0   | Page analytics         |
+| Vercel Speed Insights | 1.2.0   | Performance monitoring |
+| Google Analytics      | Latest  | Custom event tracking  |
 
 ---
 
@@ -379,20 +389,20 @@ User Action (button click, input change, slider adjust)
 
 ```typescript
 export function parseLua(code: string): ParseResult {
-  try {
-    const ast = luaparse.parse(code, {
-      locations: true,
-      ranges: true,
-      comments: false
-    });
-    return { success: true, ast };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: formatError(error),
-      errorDetails: extractErrorDetails(error)
-    };
-  }
+	try {
+		const ast = luaparse.parse(code, {
+			locations: true,
+			ranges: true,
+			comments: false,
+		});
+		return { success: true, ast };
+	} catch (error: any) {
+		return {
+			success: false,
+			error: formatError(error),
+			errorDetails: extractErrorDetails(error),
+		};
+	}
 }
 ```
 
@@ -407,12 +417,12 @@ export function parseLua(code: string): ParseResult {
 ```typescript
 // Number encoding strategies
 switch (strategy) {
-  case 0: // Split and add
-    return `(${half} + ${remainder})`;
-  case 1: // Multiply and divide
-    return `(${num * multiplier} / ${multiplier})`;
-  case 2: // Add and subtract
-    return `(${num + offset} - ${offset})`;
+	case 0: // Split and add
+		return `(${half} + ${remainder})`;
+	case 1: // Multiply and divide
+		return `(${num * multiplier} / ${multiplier})`;
+	case 2: // Add and subtract
+		return `(${num + offset} - ${offset})`;
 }
 ```
 
@@ -426,15 +436,15 @@ switch (strategy) {
 
 ```typescript
 function generateNode(node: any): string {
-  switch (node.type) {
-    case 'Chunk':
-      return generateChunk(node);
-    case 'LocalStatement':
-      return generateLocalStatement(node);
-    case 'BinaryExpression':
-      return generateBinaryExpression(node);
-    // ... 20+ node types
-  }
+	switch (node.type) {
+		case "Chunk":
+			return generateChunk(node);
+		case "LocalStatement":
+			return generateLocalStatement(node);
+		case "BinaryExpression":
+			return generateBinaryExpression(node);
+		// ... 20+ node types
+	}
 }
 ```
 
@@ -447,12 +457,9 @@ function generateNode(node: any): string {
 **Purpose:** Simplify complex subsystem
 
 ```typescript
-export function obfuscateLua(
-  code: string,
-  options?: ObfuscationOptions
-): ObfuscationResult {
-  const obfuscator = new LuaObfuscator();
-  return obfuscator.obfuscate(code, options);
+export function obfuscateLua(code: string, options?: ObfuscationOptions): ObfuscationResult {
+	const obfuscator = new LuaObfuscator();
+	return obfuscator.obfuscate(code, options);
 }
 ```
 
@@ -518,11 +525,13 @@ Transitions:
 ### 4. Analytics Privacy
 
 **Data Collected:**
+
 - Obfuscation type (mangle, encode, minify)
 - Code size (length in characters)
 - Protection level (0-100)
 
 **Not Collected:**
+
 - Actual code content
 - User identifiers
 - IP addresses (beyond standard Vercel logging)
@@ -534,6 +543,7 @@ Transitions:
 **Risk:** User-provided Lua code could contain malicious content
 
 **Mitigation:**
+
 - Monaco editor sanitizes all input
 - Code is never executed on client
 - No innerHTML usage with user content
@@ -554,11 +564,11 @@ Transitions:
 **Performance Metrics:**
 
 | Code Size | Processing Time | Memory Usage |
-|-----------|----------------|--------------|
-| < 1KB | < 50ms | < 5MB |
-| 1-10KB | 50-200ms | 5-20MB |
-| 10-100KB | 200-1000ms | 20-50MB |
-| > 100KB | > 1s | > 50MB |
+| --------- | --------------- | ------------ |
+| < 1KB     | < 50ms          | < 5MB        |
+| 1-10KB    | 50-200ms        | 5-20MB       |
+| 10-100KB  | 200-1000ms      | 20-50MB      |
+| > 100KB   | > 1s            | > 50MB       |
 
 ---
 
@@ -582,11 +592,11 @@ Transitions:
 
 **Current Bundle Sizes:**
 
-| Bundle | Size | Loaded |
-|--------|------|--------|
-| Main JS | ~400KB | Initial |
-| Monaco Editor | ~800KB | Dynamic |
-| luaparse | ~100KB | Initial |
+| Bundle        | Size   | Loaded     |
+| ------------- | ------ | ---------- |
+| Main JS       | ~400KB | Initial    |
+| Monaco Editor | ~800KB | Dynamic    |
+| luaparse      | ~100KB | Initial    |
 | Total Initial | ~500KB | First load |
 
 **Optimization:**
@@ -616,6 +626,7 @@ User Browser
 ```
 
 **Characteristics:**
+
 - Static generation for main page
 - Client-side rendering for code editor
 - Server-side analytics tracking (optional)
@@ -628,6 +639,7 @@ User Browser
 ### Unit Tests (`__tests__/unit/`)
 
 **Coverage:**
+
 - Parser: Syntax validation, error handling
 - Obfuscator: All transformation techniques
 - Generator: AST to code conversion
@@ -641,6 +653,7 @@ User Browser
 ### E2E Tests (`__tests__/e2e/`)
 
 **Scenarios:**
+
 - Full obfuscation workflow
 - Responsive design (mobile, tablet, desktop)
 - Error handling and recovery
@@ -650,6 +663,7 @@ User Browser
 **Framework:** Playwright
 
 **Browser Coverage:**
+
 - Chrome (Desktop + Mobile)
 - Firefox (Desktop)
 - Safari (Desktop + iPad)
@@ -661,6 +675,7 @@ User Browser
 ### Integration Tests
 
 **Round-Trip Validation:**
+
 ```
 Original Code
     ↓
@@ -672,6 +687,7 @@ Original Code
 ```
 
 **Test Cases:**
+
 - Fibonacci function
 - Factorial calculation
 - Quicksort algorithm
@@ -684,6 +700,7 @@ Original Code
 ### Code Organization
 
 **Directory Structure:**
+
 ```
 web/
 ├── app/                    # Next.js App Router
@@ -723,6 +740,7 @@ web/
 6. Update documentation
 
 **Example:**
+
 ```typescript
 // 1. Add option
 interface ObfuscationOptions {
@@ -774,12 +792,14 @@ if (options.deadCodeInjection) {
 ## References
 
 **External Documentation:**
+
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev)
 - [luaparse Documentation](https://oxyc.github.io/luaparse/)
 - [Monaco Editor Documentation](https://microsoft.github.io/monaco-editor/)
 
 **Related Projects:**
+
 - [Prometheus Obfuscator](https://github.com/levno-710/Prometheus)
 - [LuaSrcDiet](https://github.com/jirutka/luasrcdiet)
 - [IronBrew2](https://github.com/Stnby/IronBrew2)

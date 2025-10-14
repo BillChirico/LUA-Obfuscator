@@ -22,6 +22,7 @@ Complete guide to using the Lua Obfuscator web application.
 Visit the Lua Obfuscator at: **[Your deployment URL]**
 
 **System Requirements:**
+
 - Modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
 - JavaScript enabled
 - Minimum 50MB free RAM
@@ -67,6 +68,7 @@ The interface consists of four main areas:
    - Error detection
 
 **Example:**
+
 ```lua
 local function greet(name)
     print("Hello, " .. name)
@@ -81,16 +83,17 @@ greet("World")
 
 **Quick Start:** Use the Protection Level slider
 
-| Level | What It Does |
-|-------|-------------|
-| 0% | No automatic obfuscation |
-| 10-20% | Minification only |
-| 20-40% | Minify + Mangle Names |
-| 40-60% | Minify + Mangle + Encode Strings |
-| 60-80% | Minify + Mangle + Encode Strings + Encode Numbers |
-| 80-100% | Maximum protection (all techniques) |
+| Level   | What It Does                                      |
+| ------- | ------------------------------------------------- |
+| 0%      | No automatic obfuscation                          |
+| 10-20%  | Minification only                                 |
+| 20-40%  | Minify + Mangle Names                             |
+| 40-60%  | Minify + Mangle + Encode Strings                  |
+| 60-80%  | Minify + Mangle + Encode Strings + Encode Numbers |
+| 80-100% | Maximum protection (all techniques)               |
 
 **Advanced:** Manually toggle individual techniques:
+
 - ☐ Mangle Names
 - ☐ Encode Strings
 - ☐ Minify Code
@@ -106,6 +109,7 @@ greet("World")
 3. View result in the **Obfuscated Output** editor
 
 **Success Indicators:**
+
 - ✓ Green "Active" badge on output editor
 - ✓ Success notification (top right)
 - ✓ Obfuscated code visible
@@ -115,11 +119,13 @@ greet("World")
 ### Step 4: Use Obfuscated Code
 
 **Copy to Clipboard:**
+
 1. Click the **"Copy"** button
 2. Wait for "Copied!" confirmation
 3. Paste into your project
 
 **Download as File:**
+
 1. Click the **"Download"** button
 2. Save `obfuscated.lua` to your computer
 3. Integrate into your application
@@ -133,6 +139,7 @@ greet("World")
 **What it does:** Replaces variable and function names with hexadecimal identifiers.
 
 **Before:**
+
 ```lua
 local playerHealth = 100
 function healPlayer(amount)
@@ -141,6 +148,7 @@ end
 ```
 
 **After:**
+
 ```lua
 local _0x0000 = 100
 function _0x0001(_0x0002)
@@ -149,6 +157,7 @@ end
 ```
 
 **Use when:**
+
 - You want to hide variable/function purpose
 - Code will be distributed publicly
 - Reverse engineering is a concern
@@ -162,18 +171,21 @@ end
 **What it does:** Converts string literals to byte arrays.
 
 **Before:**
+
 ```lua
 print("Hello, World!")
 local message = "Secret message"
 ```
 
 **After:**
+
 ```lua
 print(string.char(72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33))
 local message = string.char(83, 101, 99, 114, 101, 116, 32, 109, 101, 115, 115, 97, 103, 101)
 ```
 
 **Use when:**
+
 - Strings contain sensitive text
 - You want to hide game dialogue
 - API keys or URLs are embedded (⚠️ not recommended for real secrets)
@@ -187,6 +199,7 @@ local message = string.char(83, 101, 99, 114, 101, 116, 32, 109, 101, 115, 115, 
 **What it does:** Removes comments and unnecessary whitespace.
 
 **Before:**
+
 ```lua
 -- Calculate total
 local x = 5  -- initial value
@@ -196,12 +209,14 @@ print(x)
 ```
 
 **After:**
+
 ```lua
 local x = 5
 print(x)
 ```
 
 **Use when:**
+
 - You want to reduce file size
 - Comments contain implementation details
 - Always recommended (no downsides)
@@ -215,6 +230,7 @@ print(x)
 **What it does:** Transforms numbers into mathematical expressions.
 
 **Before:**
+
 ```lua
 local health = 100
 local damage = 25
@@ -222,6 +238,7 @@ local critical = 3.5
 ```
 
 **After:**
+
 ```lua
 local health = (50 + 50)
 local damage = (50 / 2)
@@ -229,6 +246,7 @@ local critical = (35 / 10)
 ```
 
 **Use when:**
+
 - Numbers represent game balancing values
 - You want to obscure magic numbers
 - High security is needed
@@ -242,6 +260,7 @@ local critical = (35 / 10)
 **What it does:** Adds always-true conditions to confuse analysis.
 
 **Before:**
+
 ```lua
 if score > 100 then
     print("High score!")
@@ -249,6 +268,7 @@ end
 ```
 
 **After:**
+
 ```lua
 if (1 + 1 == 2) and score > 100 then
     print("High score!")
@@ -256,6 +276,7 @@ end
 ```
 
 **Use when:**
+
 - You need maximum protection
 - Static analysis is a concern
 - Performance impact is acceptable
@@ -273,6 +294,7 @@ end
 **Use Case:** Development and debugging
 
 **Example:**
+
 ```lua
 -- Original code unchanged
 local x = 5
@@ -288,6 +310,7 @@ print(x)
 **Use Case:** Public distribution with readability concerns
 
 **Example:**
+
 ```lua
 local _0x0000=5
 print(_0x0000)
@@ -302,6 +325,7 @@ print(_0x0000)
 **Use Case:** Standard game scripts, mods
 
 **Example:**
+
 ```lua
 local _0x0000=5
 print(_0x0000)
@@ -317,6 +341,7 @@ local _0x0001=string.char(84,101,115,116)
 **Use Case:** Premium content, anti-cheat systems
 
 **Example:**
+
 ```lua
 local _0x0000=(50+50)
 if(1+1==2)and _0x0000>(45+5)then
@@ -333,6 +358,7 @@ end
 **Use Case:** Critical business logic, high-value intellectual property
 
 **Example:**
+
 ```lua
 local _0x0000=(200/2)
 if(2*3>5)and _0x0000>((150-50))then
@@ -349,6 +375,7 @@ end
 **Goal:** Quickly protect a script with default settings
 
 **Steps:**
+
 1. Paste code into input editor
 2. Set Protection Level to **50%**
 3. Click **"Obfuscate"**
@@ -363,6 +390,7 @@ end
 **Goal:** Fine-tune obfuscation for specific needs
 
 **Steps:**
+
 1. Enter code
 2. Set Protection Level to **0%** (disable auto-settings)
 3. Manually enable desired techniques:
@@ -384,9 +412,11 @@ end
 **Goal:** Ensure obfuscated code works correctly
 
 **Steps:**
+
 1. Obfuscate code
 2. Copy obfuscated output
 3. Test in your Lua runtime:
+
    ```bash
    # For standalone Lua
    lua obfuscated.lua
@@ -394,6 +424,7 @@ end
    # For game runtime
    # Load script in game and test functionality
    ```
+
 4. Verify all features work as expected
 5. If issues arise, reduce protection level
 6. Re-test until stable
@@ -407,6 +438,7 @@ end
 **Goal:** Obfuscate multiple scripts with consistent settings
 
 **Steps:**
+
 1. Configure desired settings once
 2. For each script:
    a. Paste code
@@ -426,6 +458,7 @@ end
 **Cause:** Your code has syntax errors
 
 **Solution:**
+
 1. Check the error message for line/column numbers
 2. Look for:
    - Missing `end` keywords
@@ -436,6 +469,7 @@ end
 4. Try obfuscating again
 
 **Example:**
+
 ```lua
 -- ERROR: Missing 'end'
 if x > 5 then
@@ -455,6 +489,7 @@ end
 **Cause:** Internal error during transformation
 
 **Solution:**
+
 1. Try reducing protection level
 2. Disable advanced techniques (Numbers, Control Flow)
 3. Check for very large numbers or complex expressions
@@ -468,25 +503,31 @@ end
 **Common Causes:**
 
 **1. Global variable collision:**
+
 ```lua
 -- If you're using _0x0000 manually, mangling may conflict
 local _0x0000 = 5  -- Avoid using _0x#### names
 ```
+
 **Solution:** Rename your variables
 
 **2. String encoding breaks escapes:**
+
 ```lua
 -- Complex escape sequences may not encode properly
 local path = "C:\\Users\\Name\\File.txt"
 ```
+
 **Solution:** Disable string encoding for problematic strings
 
 **3. Number encoding precision loss:**
+
 ```lua
 -- Very large or precise numbers
 local big = 999999999999999
 local precise = 3.141592653589793
 ```
+
 **Solution:** Disable number encoding or reduce protection level
 
 ---
@@ -496,6 +537,7 @@ local precise = 3.141592653589793
 **Cause:** Browser clipboard permissions
 
 **Solution:**
+
 1. Check if browser allows clipboard access
 2. Try manually selecting and copying:
    - Click in output editor
@@ -510,6 +552,7 @@ local precise = 3.141592653589793
 **Cause:** High protection level impacts performance
 
 **Solution:**
+
 1. Reduce protection level from 100% to 50-70%
 2. Disable Control Flow obfuscation
 3. Disable Number Encoding
@@ -530,48 +573,61 @@ local precise = 3.141592653589793
 ### DO:
 
 ✅ **Test obfuscated code thoroughly**
-   - Always test in target runtime before deploying
+
+- Always test in target runtime before deploying
 
 ✅ **Start with low protection levels**
-   - Gradually increase if more security needed
+
+- Gradually increase if more security needed
 
 ✅ **Keep original source code**
-   - Never lose your readable source!
+
+- Never lose your readable source!
 
 ✅ **Use version control**
-   - Commit both original and obfuscated versions
+
+- Commit both original and obfuscated versions
 
 ✅ **Document obfuscation settings**
-   - Record which settings were used for each release
+
+- Record which settings were used for each release
 
 ✅ **Backup before obfuscating**
-   - Save original code separately
+
+- Save original code separately
 
 ✅ **Use minification always**
-   - No downsides, only benefits
+
+- No downsides, only benefits
 
 ---
 
 ### DON'T:
 
 ❌ **Don't obfuscate development code**
-   - Obfuscation makes debugging impossible
+
+- Obfuscation makes debugging impossible
 
 ❌ **Don't rely on obfuscation for security**
-   - It provides obscurity, not encryption
-   - Never use for protecting real secrets (API keys, passwords)
+
+- It provides obscurity, not encryption
+- Never use for protecting real secrets (API keys, passwords)
 
 ❌ **Don't obfuscate third-party libraries**
-   - May break functionality or violate licenses
+
+- May break functionality or violate licenses
 
 ❌ **Don't use maximum protection everywhere**
-   - Performance impact may be unacceptable
+
+- Performance impact may be unacceptable
 
 ❌ **Don't obfuscate debugging code**
-   - Remove debug code before obfuscating
+
+- Remove debug code before obfuscating
 
 ❌ **Don't lose source code**
-   - Reverse-engineering obfuscated code is extremely difficult
+
+- Reverse-engineering obfuscated code is extremely difficult
 
 ---
 
@@ -579,18 +635,19 @@ local precise = 3.141592653589793
 
 **Recommended Protection Levels:**
 
-| Script Type | Recommended Level | Reasoning |
-|-------------|-------------------|-----------|
-| UI Scripts | 20-40% | Readability for modding |
-| Game Logic | 50-70% | Balance security/performance |
-| Anti-Cheat | 80-100% | Maximum protection needed |
-| Server-Side | 0% | Not distributed to players |
+| Script Type | Recommended Level | Reasoning                    |
+| ----------- | ----------------- | ---------------------------- |
+| UI Scripts  | 20-40%            | Readability for modding      |
+| Game Logic  | 50-70%            | Balance security/performance |
+| Anti-Cheat  | 80-100%           | Maximum protection needed    |
+| Server-Side | 0%                | Not distributed to players   |
 
 ---
 
 ### For Mod Distribution:
 
 **Recommended Settings:**
+
 - Mangle Names: ✓ (hide implementation)
 - Encode Strings: ☐ (allow language modifications)
 - Minify: ✓ (reduce size)
@@ -609,6 +666,7 @@ local precise = 3.141592653589793
 ### Q: Will obfuscation break my code?
 
 **A:** Properly obfuscated code should work identically to the original. However:
+
 - Always test thoroughly
 - Some edge cases may cause issues
 - Report bugs if you find functional differences
@@ -618,6 +676,7 @@ local precise = 3.141592653589793
 ### Q: Can I reverse obfuscated code?
 
 **A:** Yes, with sufficient effort. Obfuscation:
+
 - Makes code harder to understand
 - Removes meaningful names
 - Obscures constants
@@ -664,6 +723,7 @@ local precise = 3.141592653589793
 ### Q: How do I report bugs?
 
 **A:** Visit [GitHub Issues](https://github.com/BillChirico/LUA-Obfuscator/issues) and create a new issue with:
+
 - Sample input code
 - Obfuscation settings used
 - Expected vs actual behavior
@@ -680,15 +740,18 @@ local precise = 3.141592653589793
 ## Getting Help
 
 **Documentation:**
+
 - [API Reference](./API_REFERENCE.md) - Technical API documentation
 - [Architecture](./ARCHITECTURE.md) - System design and components
 - [Developer Guide](./DEVELOPER_GUIDE.md) - Contributing and extending
 
 **Support:**
+
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and community support
 
 **Updates:**
+
 - Follow the project on GitHub for updates
 - Check CHANGELOG for new features and fixes
 
@@ -699,6 +762,7 @@ local precise = 3.141592653589793
 ### Tip 1: Hybrid Protection
 
 Combine obfuscation with other protection methods:
+
 - Obfuscate client-side code
 - Keep sensitive logic server-side
 - Use checksums to detect tampering
@@ -709,6 +773,7 @@ Combine obfuscation with other protection methods:
 ### Tip 2: Staged Obfuscation
 
 Obfuscate in stages during development:
+
 1. **Alpha:** No obfuscation (full debugging)
 2. **Beta:** Light obfuscation (20-40%)
 3. **Release:** Full obfuscation (50-80%)
@@ -718,6 +783,7 @@ Obfuscate in stages during development:
 ### Tip 3: Selective Obfuscation
 
 Obfuscate only critical parts:
+
 - Protect proprietary algorithms
 - Hide game balancing formulas
 - Secure anti-cheat logic
@@ -728,6 +794,7 @@ Obfuscate only critical parts:
 ### Tip 4: Performance Testing
 
 Always benchmark obfuscated code:
+
 ```lua
 local start = os.clock()
 -- Your obfuscated code
@@ -742,6 +809,7 @@ If performance degrades significantly, reduce protection level.
 ### Tip 5: Documentation
 
 Document obfuscation in your project:
+
 ```
 /src/original/        # Original readable source
 /src/obfuscated/      # Obfuscated distribution versions
@@ -755,23 +823,23 @@ BUILD.md              # Document obfuscation process
 
 ### Protection Level Guide
 
-| Level | Techniques | Use Case |
-|-------|-----------|----------|
-| 0% | None | Development |
-| 20% | Minify + Mangle | Light protection |
-| 50% | + Strings | Standard protection |
-| 80% | + Numbers + Control Flow | High protection |
-| 100% | Maximum | Critical protection |
+| Level | Techniques               | Use Case            |
+| ----- | ------------------------ | ------------------- |
+| 0%    | None                     | Development         |
+| 20%   | Minify + Mangle          | Light protection    |
+| 50%   | + Strings                | Standard protection |
+| 80%   | + Numbers + Control Flow | High protection     |
+| 100%  | Maximum                  | Critical protection |
 
 ### Technique Impact
 
-| Technique | Speed | Size | Security |
-|-----------|-------|------|----------|
-| Minify | ++ | -- | + |
-| Mangle | = | = | +++ |
-| Encode Strings | - | +++ | ++ |
-| Encode Numbers | - | ++ | ++ |
-| Control Flow | -- | + | +++ |
+| Technique      | Speed | Size | Security |
+| -------------- | ----- | ---- | -------- |
+| Minify         | ++    | --   | +        |
+| Mangle         | =     | =    | +++      |
+| Encode Strings | -     | +++  | ++       |
+| Encode Numbers | -     | ++   | ++       |
+| Control Flow   | --    | +    | +++      |
 
 Legend: `++` Major benefit, `+` Benefit, `=` No change, `-` Minor cost, `--` Major cost
 
