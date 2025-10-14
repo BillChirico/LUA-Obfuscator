@@ -131,7 +131,7 @@ describe("utils", () => {
 		});
 
 		test("should handle nested arrays and objects", () => {
-			const result = cn(["class1", { "class2": true, "class3": false }], "class4");
+			const result = cn(["class1", { class2: true, class3: false }], "class4");
 			expect(result).toContain("class1");
 			expect(result).toContain("class2");
 			expect(result).not.toContain("class3");

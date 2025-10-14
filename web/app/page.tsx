@@ -317,7 +317,7 @@ export default function Home() {
 						</div>
 						<div>
 							<h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-blue-200">
-								Lua Obfuscator
+								Bill's Lua Obfuscator
 							</h1>
 							<p className="text-xs sm:text-sm text-gray-300/90 hidden sm:block font-medium">
 								Professional code protection & security
@@ -723,6 +723,183 @@ export default function Home() {
 						</div>
 					</aside>
 				)}
+
+				{/* SEO-Optimized Content Section - Screen reader accessible */}
+				<section className="sr-only">
+					<h2>About Bill's Lua Obfuscator</h2>
+					<p>
+						Bill's Lua Obfuscator is a professional, free online tool for protecting Lua source code through advanced
+						obfuscation techniques. Whether you're developing Roblox scripts, FiveM resources, Garry's Mod addons, World
+						of Warcraft addons, or any other Lua-based application, this tool helps secure your intellectual property.
+					</p>
+
+					<h3>Key Features</h3>
+					<ul>
+						<li>Variable and Function Name Mangling - Replace identifiers with hexadecimal codes</li>
+						<li>String Encoding - Convert string literals to byte arrays using string.char()</li>
+						<li>Number Encoding - Transform numeric literals into mathematical expressions</li>
+						<li>Control Flow Obfuscation - Add opaque predicates to complicate reverse engineering</li>
+						<li>Code Minification - Remove comments and whitespace for smaller file sizes</li>
+						<li>Real-time Processing - Instant obfuscation in your browser with no server uploads</li>
+						<li>Multi-Version Support - Compatible with Lua 5.1, 5.2, 5.3, and 5.4</li>
+						<li>Configurable Protection Levels - Adjust security vs performance trade-offs (0-100%)</li>
+						<li>Monaco Code Editor - Professional code editing with syntax highlighting</li>
+						<li>Copy & Download - Easy export of obfuscated code</li>
+						<li>Free & Private - No registration, no tracking, code never leaves your device</li>
+					</ul>
+
+					<h3>Supported Lua Versions</h3>
+					<p>
+						Our Lua obfuscator supports all major Lua versions including Lua 5.1 (most common in game modding), Lua 5.2,
+						Lua 5.3, and Lua 5.4. The tool automatically handles syntax and semantic differences between versions to
+						ensure your obfuscated code remains compatible with your target runtime environment.
+					</p>
+
+					<h3>Common Use Cases</h3>
+					<ul>
+						<li>Roblox Game Scripts - Protect your Roblox game logic and prevent script theft</li>
+						<li>FiveM Resources - Secure your GTA V multiplayer server scripts</li>
+						<li>Garry's Mod Addons - Protect your GMod Lua code from unauthorized copying and reverse engineering</li>
+						<li>World of Warcraft Addons - Obfuscate WoW addon code while maintaining functionality</li>
+						<li>ComputerCraft Programs - Secure Minecraft ComputerCraft scripts</li>
+						<li>LÖVE2D Games - Protect your LÖVE game engine code</li>
+						<li>Commercial Lua Applications - Secure proprietary business logic in Lua-based software</li>
+						<li>Educational Projects - Demonstrate obfuscation techniques for security education</li>
+					</ul>
+
+					<h3>How Lua Obfuscation Works</h3>
+					<p>
+						Lua code obfuscation transforms readable source code into functionally equivalent but
+						difficult-to-understand code. This process involves multiple techniques that work together to protect your
+						intellectual property:
+					</p>
+					<ul>
+						<li>
+							<strong>Name Mangling:</strong> Variables, functions, and local identifiers are replaced with meaningless
+							hexadecimal names, making it impossible to understand the code's purpose from variable names alone.
+						</li>
+						<li>
+							<strong>String Encoding:</strong> String literals are converted to byte arrays and reconstructed at
+							runtime using string.char(), hiding sensitive text like API keys, messages, and configuration values.
+						</li>
+						<li>
+							<strong>Number Encoding:</strong> Numeric values are transformed into complex mathematical expressions
+							that evaluate to the same result, obscuring important constants and calculations.
+						</li>
+						<li>
+							<strong>Control Flow Obfuscation:</strong> Opaque predicates and additional conditional logic are inserted
+							to complicate static analysis and make it harder to trace program execution.
+						</li>
+						<li>
+							<strong>Minification:</strong> All comments, whitespace, and formatting are removed, reducing file size
+							and making manual analysis more time-consuming.
+						</li>
+					</ul>
+
+					<h3>Security and Privacy</h3>
+					<p>
+						Your code security and privacy are our top priorities. Bill's Lua Obfuscator runs entirely in your web
+						browser using client-side JavaScript. This means:
+					</p>
+					<ul>
+						<li>Your Lua source code never leaves your device or gets uploaded to any server</li>
+						<li>No user accounts, registration, or email addresses are required</li>
+						<li>No tracking cookies or analytics on your code content</li>
+						<li>All processing happens locally on your machine for complete privacy</li>
+						<li>Works offline once the page is loaded</li>
+						<li>Open source - you can verify the code yourself</li>
+					</ul>
+
+					<h3>Performance Considerations</h3>
+					<p>
+						While obfuscation provides valuable code protection, it can introduce some performance overhead. Lower
+						protection levels (0-40%) have minimal impact on runtime performance, making them suitable for most
+						applications. Medium protection (40-70%) offers a good balance between security and performance. Maximum
+						protection (70-100%) provides the strongest security but may noticeably impact performance in
+						computationally intensive applications. Use the configurable protection level slider to find the right
+						balance for your specific use case.
+					</p>
+
+					<h3>Best Practices</h3>
+					<ul>
+						<li>Always keep a backup of your original, unobfuscated source code</li>
+						<li>Test obfuscated code thoroughly to ensure functionality is preserved</li>
+						<li>
+							Use appropriate protection levels - not all code requires maximum obfuscation, and lower levels perform
+							better
+						</li>
+						<li>Combine obfuscation with other security measures like server-side validation</li>
+						<li>Consider obfuscating only sensitive portions of your code rather than everything</li>
+						<li>
+							Be aware that no obfuscation is completely unbreakable, but it significantly raises the difficulty bar
+						</li>
+						<li>Regularly update your obfuscated code as you update your source to maintain security</li>
+					</ul>
+
+					<h3>Frequently Asked Questions</h3>
+					<dl>
+						<dt>Can obfuscated Lua code be deobfuscated?</dt>
+						<dd>
+							While no obfuscation is 100% irreversible, Bill's Lua Obfuscator makes reverse engineering significantly
+							more difficult and time-consuming. The combination of multiple obfuscation techniques creates layers of
+							complexity that deter casual theft and require substantial expertise to reverse.
+						</dd>
+
+						<dt>Will obfuscation break my Lua code?</dt>
+						<dd>
+							No, the obfuscator is designed to preserve the exact functionality of your original code. All
+							transformations are semantically equivalent, meaning the obfuscated code behaves identically to the
+							original. However, always test your obfuscated code to ensure compatibility with your specific runtime
+							environment.
+						</dd>
+
+						<dt>Does this work with LuaJIT?</dt>
+						<dd>
+							Yes, the obfuscated code is compatible with LuaJIT as it uses standard Lua syntax and semantics. LuaJIT's
+							JIT compiler will optimize the obfuscated code just as it would with normal Lua code, though some
+							optimization opportunities may be reduced due to obfuscation.
+						</dd>
+
+						<dt>How do I choose the right protection level?</dt>
+						<dd>
+							Start with medium protection (50%) as a baseline. If performance is not critical and you need stronger
+							security, increase to 70-90%. For performance-sensitive applications or code that doesn't contain valuable
+							intellectual property, 20-40% may be sufficient. Test different levels to find the optimal balance for
+							your specific use case.
+						</dd>
+
+						<dt>Is this legal to use?</dt>
+						<dd>
+							Yes, obfuscating your own code is completely legal and is a common practice in software development for
+							protecting intellectual property. However, always ensure you have the right to obfuscate any code you're
+							working with, and respect licensing terms of any libraries or frameworks you use.
+						</dd>
+					</dl>
+
+					<h3>Technical Details</h3>
+					<p>
+						Bill's Lua Obfuscator is built with modern web technologies including Next.js 15, React 19, TypeScript, and
+						the Monaco code editor. It uses the luaparse library to parse Lua source code into an Abstract Syntax Tree
+						(AST), applies various transformation techniques, and generates valid Lua code from the modified AST. The
+						tool has been extensively tested with over 160 unit tests and 37 end-to-end tests to ensure reliability and
+						correctness.
+					</p>
+
+					<h3>Open Source</h3>
+					<p>
+						Bill's Lua Obfuscator is open source and available on GitHub. You can review the code, contribute
+						improvements, report issues, or fork the project for your own use. The project welcomes contributions from
+						the community to improve obfuscation techniques, add new features, and enhance compatibility.
+					</p>
+
+					<h3>Related Tools and Resources</h3>
+					<p>
+						For additional Lua development resources, consider exploring: Lua official documentation and language
+						reference, LuaJIT documentation for performance optimization, Lua code beautifiers and formatters for
+						development, Lua testing frameworks like Busted and LuaUnit, and Lua package managers like LuaRocks. These
+						tools complement obfuscation by helping you write better, more maintainable code before applying protection.
+					</p>
+				</section>
 			</main>
 		</BackgroundGradientAnimation>
 	);
