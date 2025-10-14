@@ -55,5 +55,8 @@
 		"tailwindcss": "^4.1.14",
 		"ts-jest": "^29.2.5",
 		"typescript": "^5.9.3"
+	},
+	"overrides": {
+		"dompurify": "^3.2.4"
 	}
 }
