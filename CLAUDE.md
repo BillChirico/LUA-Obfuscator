@@ -4,46 +4,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua source code by transforming it into functionally equivalent but harder-to-read code.
+Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation tool that protects Lua source code by transforming it into functionally equivalent but harder-to-read code. The application runs entirely in the browser using Next.js 15+ and React 19+.
+
+**Live Features:**
+
+- Real-time Lua code obfuscation in the browser
+- Multiple obfuscation techniques with configurable strength levels
+- Beautiful, responsive UI that works on mobile, tablet, and desktop
+- Monaco code editor with Lua syntax highlighting
+- Comprehensive test coverage (160+ unit tests, 37+ E2E tests)
 
 ## Architecture
 
-### Core Components (When Implemented)
+### Implementation Status: ✅ **COMPLETE**
 
-**Parser/Lexer Layer**
-- Tokenizes Lua source code into an abstract syntax tree (AST)
-- Handles Lua 5.1, 5.2, 5.3, and/or 5.4 syntax variations
-- Preserves semantic meaning while enabling transformations
+### Core Components
 
-**Transformation Engine**
-- Applies obfuscation techniques to the AST
-- Common transformations include:
-  - Variable/function name mangling
-  - String encoding/encryption
-  - Control flow obfuscation (opaque predicates, control flow flattening)
-  - Dead code injection
-  - Constant folding/unfolding
-  - Number encoding schemes
+**Parser/Lexer Layer** (`lib/parser.ts`)
 
-**Code Generator**
-- Converts transformed AST back to valid Lua source code
+- Uses `luaparse` library to tokenize Lua source into AST
+- Supports Lua 5.1, 5.2, 5.3 syntax
+- Validates code and provides meaningful error messages
+- Exports: `parseLua()`, `validateLua()`
+
+**Transformation Engine** (`lib/obfuscator.ts`, `lib/obfuscator-simple.ts`)
+
+- Applies multiple obfuscation techniques to the AST:
+  - ✅ **Variable/function name mangling** - Hexadecimal identifier replacement
+  - ✅ **String encoding** - Byte array transformation using string.char()
+  - ✅ **Number encoding** - Mathematical expression obfuscation
+  - ✅ **Control flow obfuscation** - Opaque predicates for complexity
+  - ✅ **Code minification** - Whitespace and comment removal
+- Configurable protection levels (0-100%)
+- Preserves Lua standard library globals (print, pairs, math._, string._, etc.)
+- Exports: `obfuscateLua()` with `ObfuscationOptions`
+
+**Code Generator** (`lib/generator.ts`)
+
+- Converts transformed AST back to valid Lua source
+- Handles 20+ Lua node types (functions, tables, loops, expressions, etc.)
 - Maintains functional equivalence with original code
-- Optional minification for size reduction
+- Supports minification mode
+- Exports: `generateCode()`
 
 ### Key Design Considerations
 
 **Lua Version Compatibility**
+
 - Different Lua versions have syntax/semantic differences
 - 5.1: Most common in game modding (WoW, FiveM, etc.)
-- 5.2+: Added goto statements, different _ENV handling
+- 5.2+: Added goto statements, different \_ENV handling
 - Consider target runtime environment when implementing transformations
 
 **Performance vs Security Trade-offs**
+
 - Heavy obfuscation increases execution time
 - Balance protection level with runtime performance
 - Provide configurable obfuscation strength levels
 
 **Reversibility Prevention**
+
 - Avoid simple substitution ciphers (easily reversed)
 - Layer multiple transformation techniques
 - Consider anti-debugging measures for high-security scenarios
@@ -51,11 +71,13 @@ Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua sou
 ## Web Interface Design Standards
 
 **Design Philosophy**
+
 - Create beautiful, production-worthy interfaces (not cookie cutter designs)
 - Fully featured and polished for production use
 - Professional aesthetic with attention to detail
 
 **Tech Stack**
+
 - JSX syntax with Tailwind CSS (latest version)
 - React hooks for state management
 - Lucide React for all icons
@@ -64,23 +86,79 @@ Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua sou
 - Primary code font: **JetBrains Mono Nerd Font** (with ligatures enabled)
 
 **Component Guidelines**
+
 - Use shadcn components as the foundation
 - Avoid installing additional UI theme packages or icon libraries
 - Leverage Lucide React icons exclusively (including for logos)
 - Only install new packages when absolutely necessary or explicitly requested
 
-**UI/UX Requirements**
-- Code editor with syntax highlighting for Lua input/output
-- Real-time obfuscation preview
-- Configuration panel for obfuscation strength and techniques
-- Download/copy obfuscated code functionality
-- Clear visual feedback for processing states
-- Responsive design for desktop and tablet use
+**UI/UX Implementation** ✅
+
+- ✅ Monaco code editor with Lua syntax highlighting
+- ✅ Real-time obfuscation with 100ms debounce
+- ✅ Configuration panel with 5 toggle switches + protection level slider
+- ✅ Copy to clipboard and download functionality
+- ✅ Processing states with disabled buttons and loading text
+- ✅ Fully responsive design (mobile 390px+, tablet 768px+, desktop 1024px+)
+- ✅ Error display with meaningful messages
+- ✅ Beautiful animated gradient background
+- ✅ Touch-friendly controls for mobile devices
+
+## Testing & Quality Assurance
+
+### Test Coverage ✅
+
+**Unit Tests** (`__tests__/unit/lib/`)
+
+- 160 passing tests across 4 test suites
+- Coverage: 90%+ lines, functions, statements; 85%+ branches
+- Tests: parser.ts, obfuscator.ts, generator.ts
+- Framework: Jest + @testing-library/react
+
+**E2E Tests** (`__tests__/e2e/`)
+
+- 37 tests across 6 browser configurations
+- Browsers: Chrome, Firefox, Safari (Desktop + Mobile), iPad
+- Test files:
+  - `obfuscation-workflow.spec.ts` - Full user workflow
+  - `responsive.spec.ts` - Mobile/tablet/desktop layouts
+  - `error-handling.spec.ts` - Error states and recovery
+- Framework: Playwright
+
+**Running Tests:**
+
+```bash
+npm test                 # Jest unit tests
+npm run test:coverage    # Unit tests with coverage report
+npm run test:e2e         # Playwright E2E tests
+npm run test:e2e:ui      # Playwright with UI mode
+npm run test:all         # Run both Jest and Playwright
+```
+
+### Code Formatting
+
+**Prettier Configuration** (`.prettierrc.json`)
+
+- Tab width: 2 spaces (using tabs)
+- Print width: 120 characters
+- Single quotes: false (use double quotes)
+- Semicolons: always
+- Trailing commas: ES5
+- Arrow parens: avoid
+
+**Commands:**
+
+```bash
+npm run format           # Format all files
+npm run format:check     # Check formatting without changes
+```
 
 ## Development Workflow
 
 ### File Creation Guidelines
+
 **IMPORTANT: Minimize file creation**
+
 - **NEVER** create markdown (.md) files unless absolutely necessary
 - **NEVER** create documentation files proactively
 - Only create files when explicitly requested by the user
@@ -88,20 +166,25 @@ Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua sou
 - Exception: Core implementation files (code, tests, configs) that are required for functionality
 
 **When documenting work:**
+
 - Provide documentation inline in responses to the user
 - Use code comments for implementation notes
 - Update existing README.md if documentation is truly needed
 - Ask user first before creating any new documentation files
 
-### Testing Strategy
-- Unit tests for individual transformation passes
-- Integration tests with real Lua scripts
-- Benchmark tests to measure performance impact
-- Round-trip testing: obfuscate → deobfuscate → verify equivalence
+### Testing Strategy ✅ **IMPLEMENTED**
+
+- ✅ Unit tests for parser, obfuscator, and generator
+- ✅ Integration tests with real Lua scripts (fibonacci, factorial, quicksort)
+- ✅ E2E tests for complete user workflows
+- ✅ Responsive design tests across multiple viewports
+- ✅ Error handling and recovery tests
+- ✅ Round-trip validation: obfuscate → parse → verify validity
 
 ### Common Pitfalls to Avoid
 
 **Lua-Specific Challenges**
+
 - Table constructor syntax variations
 - Upvalue handling in closures
 - Metatables and metamethods
@@ -109,25 +192,117 @@ Bill's Lua Obfuscator is a Lua code obfuscation tool designed to protect Lua sou
 - Environment manipulation (`_G`, `_ENV`)
 
 **Obfuscation Errors**
+
 - Breaking closure semantics
 - Corrupting string escape sequences
 - Invalid identifier generation (Lua keywords, syntax rules)
 - Scope pollution with generated names
 - Breaking require/module patterns
 
-## Recommended Libraries
+## Technology Stack
 
-**Lua AST/Parser Libraries**
-- LuaMinify: Existing Lua parser and minifier
-- Metalua: Compile-time metaprogramming framework with AST support
-- LuaJIT's parser (if targeting LuaJIT)
+**Frontend Framework**
+
+- Next.js 15.5.4 (App Router)
+- React 19.2.0
+- TypeScript 5.9.3
+
+**UI Libraries**
+
+- Tailwind CSS 4.1.14
+- shadcn/ui components (Radix UI primitives)
+- Lucide React 0.545.0 (icons)
+- Monaco Editor 4.7.0 (code editor)
+
+**Obfuscation**
+
+- luaparse 0.3.1 (Lua parser)
 
 **Testing**
-- busted: Lua unit testing framework
-- luacheck: Static analyzer for catching errors
+
+- Jest 29.7.0 + @testing-library/react 16.1.0
+- Playwright 1.56.0
+
+**Code Quality**
+
+- ESLint 9.37.0
+- Prettier (latest)
+
+**Analytics**
+
+- Vercel Analytics 1.5.0
+- Vercel Speed Insights 1.2.0
+- Google Analytics (gtag)
+
+## Project Structure
+
+```
+web/
+├── app/                          # Next.js App Router
+│   ├── api/analytics/           # Analytics tracking endpoint
+│   ├── layout.tsx               # Root layout with metadata
+│   ├── page.tsx                 # Main obfuscator interface
+│   ├── globals.css              # Global styles
+│   └── manifest.ts              # PWA manifest
+├── components/                   # React components
+│   ├── BackgroundGradient.tsx   # Animated gradient background
+│   ├── CodeEditor.tsx           # Monaco editor wrapper
+│   ├── GoogleAnalytics.tsx      # GA integration
+│   └── ui/                      # shadcn components
+├── lib/                         # Core obfuscation logic
+│   ├── parser.ts                # Lua AST parser wrapper
+│   ├── obfuscator.ts            # Main obfuscation engine
+│   ├── obfuscator-simple.ts     # Simplified API
+│   ├── generator.ts             # AST to Lua code generator
+│   ├── analytics-client.ts      # Client-side analytics
+│   ├── analytics-server.ts      # Server-side analytics
+│   └── utils.ts                 # Utility functions
+├── __tests__/                   # Test suites
+│   ├── unit/lib/               # Unit tests
+│   ├── integration/            # Integration tests
+│   ├── e2e/                    # Playwright E2E tests
+│   └── fixtures/               # Test data
+├── types/                       # TypeScript definitions
+├── public/                      # Static assets
+├── playwright.config.ts         # Playwright configuration
+├── jest.config.js              # Jest configuration
+├── jest.setup.js               # Jest setup with browser mocks
+├── .prettierrc.json            # Prettier configuration
+└── package.json                # Dependencies and scripts
+```
+
+## Deployment
+
+**Platform:** Vercel
+**Build Command:** `npm run build`
+**Output Directory:** `.next`
+**Node Version:** 20.x
+
+**Environment Variables:**
+
+- `NEXT_PUBLIC_SITE_URL` - Base URL for metadata
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` - Google Analytics ID
 
 ## Related Projects for Reference
 
 - Prometheus Obfuscator
 - LuaSrcDiet (minifier with some obfuscation)
 - IronBrew2 (Lua 5.1 obfuscator)
+
+## Maintenance Notes
+
+### When Adding New Features
+
+1. **Write tests first** (TDD approach)
+2. **Update TypeScript types** if needed
+3. **Run Prettier** before committing (`npm run format`)
+4. **Verify all tests pass** (`npm run test:all`)
+5. **Test responsive behavior** on mobile, tablet, desktop
+6. **Update CLAUDE.md** if architecture changes
+
+### Performance Considerations
+
+- Obfuscation runs client-side with 100ms timeout to prevent UI blocking
+- Monaco editor uses dynamic import to reduce initial bundle size
+- Code is processed in chunks to maintain responsiveness
+- Analytics calls are fire-and-forget to avoid blocking UI

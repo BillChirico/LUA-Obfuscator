@@ -93,7 +93,7 @@ export class LuaObfuscator {
 	 * Replaces meaningful names with obscure identifiers
 	 */
 	private mangleNames(ast: any): any {
-		return this.walkAST(ast, (node) => {
+		return this.walkAST(ast, node => {
 			// Mangle local variables and functions
 			if (node.type === "Identifier" && node.name) {
 				// Don't mangle global functions like print, require, etc.
@@ -150,7 +150,7 @@ export class LuaObfuscator {
 	 * Encodes string literals to make them less readable
 	 */
 	private encodeStrings(ast: any): any {
-		return this.walkAST(ast, (node) => {
+		return this.walkAST(ast, node => {
 			if (node.type === "StringLiteral" && node.raw) {
 				// Extract string value from raw (remove quotes)
 				// node.raw includes quotes, e.g., '"hello"' or "'hello'"
@@ -175,15 +175,15 @@ export class LuaObfuscator {
 		// Split by strings to avoid removing comment-like content inside strings
 		const parts: string[] = [];
 		let inString = false;
-		let stringChar = '';
-		let current = '';
+		let stringChar = "";
+		let current = "";
 
 		for (let i = 0; i < code.length; i++) {
 			const char = code[i];
-			const prevChar = i > 0 ? code[i - 1] : '';
+			const prevChar = i > 0 ? code[i - 1] : "";
 
 			// Track string boundaries
-			if ((char === '"' || char === "'") && prevChar !== '\\') {
+			if ((char === '"' || char === "'") && prevChar !== "\\") {
 				if (!inString) {
 					// Starting a string
 					inString = true;
@@ -191,24 +191,24 @@ export class LuaObfuscator {
 				} else if (char === stringChar) {
 					// Ending a string
 					inString = false;
-					stringChar = '';
+					stringChar = "";
 				}
 			}
 
 			current += char;
 
 			// If we're at the start of a comment (outside strings), process accumulated code
-			if (!inString && char === '-' && i + 1 < code.length && code[i + 1] === '-') {
+			if (!inString && char === "-" && i + 1 < code.length && code[i + 1] === "-") {
 				// Remove the current part's trailing '--'
 				current = current.slice(0, -1);
 				parts.push(current);
 
 				// Skip the comment
-				if (i + 3 < code.length && code[i + 2] === '[' && code[i + 3] === '[') {
+				if (i + 3 < code.length && code[i + 2] === "[" && code[i + 3] === "[") {
 					// Multi-line comment
 					i += 4;
 					while (i < code.length - 1) {
-						if (code[i] === ']' && code[i + 1] === ']') {
+						if (code[i] === "]" && code[i + 1] === "]") {
 							i += 2;
 							break;
 						}
@@ -217,16 +217,16 @@ export class LuaObfuscator {
 					i--; // Adjust because loop will increment
 				} else {
 					// Single-line comment
-					while (i < code.length && code[i] !== '\n') {
+					while (i < code.length && code[i] !== "\n") {
 						i++;
 					}
 				}
-				current = '';
+				current = "";
 			}
 		}
 
 		parts.push(current);
-		code = parts.join('');
+		code = parts.join("");
 
 		// Remove excessive whitespace
 		code = code.replace(/\n\s*\n/g, "\n"); // Multiple blank lines
@@ -243,7 +243,7 @@ export class LuaObfuscator {
 	 * Encodes numeric literals using mathematical expressions to obscure values
 	 */
 	private encodeNumbers(ast: any, protectionLevel: number): any {
-		return this.walkAST(ast, (node) => {
+		return this.walkAST(ast, node => {
 			if (node.type === "NumericLiteral" && typeof node.value === "number") {
 				// Skip very small numbers (0-3) as encoding them is often counterproductive
 				if (node.value >= 0 && node.value <= 3) {
@@ -268,7 +268,7 @@ export class LuaObfuscator {
 							type: "BinaryExpression",
 							operator: "+",
 							left: { type: "NumericLiteral", value: half },
-							right: { type: "NumericLiteral", value: remainder }
+							right: { type: "NumericLiteral", value: remainder },
 						};
 						node.wasEncoded = true;
 						break;
@@ -280,7 +280,7 @@ export class LuaObfuscator {
 							type: "BinaryExpression",
 							operator: "/",
 							left: { type: "NumericLiteral", value: node.value * multiplier },
-							right: { type: "NumericLiteral", value: multiplier }
+							right: { type: "NumericLiteral", value: multiplier },
 						};
 						node.wasEncoded = true;
 						break;
@@ -292,7 +292,7 @@ export class LuaObfuscator {
 							type: "BinaryExpression",
 							operator: "-",
 							left: { type: "NumericLiteral", value: node.value + offset },
-							right: { type: "NumericLiteral", value: offset }
+							right: { type: "NumericLiteral", value: offset },
 						};
 						node.wasEncoded = true;
 						break;
@@ -304,7 +304,7 @@ export class LuaObfuscator {
 							type: "BinaryExpression",
 							operator: "^",
 							left: { type: "NumericLiteral", value: node.value ^ xorKey },
-							right: { type: "NumericLiteral", value: xorKey }
+							right: { type: "NumericLiteral", value: xorKey },
 						};
 						node.wasEncoded = true;
 						break;
@@ -320,7 +320,7 @@ export class LuaObfuscator {
 	 * Adds opaque predicates and complicates control flow to make analysis harder
 	 */
 	private obfuscateControlFlow(ast: any, protectionLevel: number): any {
-		return this.walkAST(ast, (node) => {
+		return this.walkAST(ast, node => {
 			// Wrap if statements with opaque predicates
 			if (node.type === "IfStatement" && node.clauses && node.clauses.length > 0) {
 				// Protection level controls obfuscation probability (0-100%)
@@ -344,9 +344,9 @@ export class LuaObfuscator {
 								type: "BinaryExpression",
 								operator: "+",
 								left: { type: "NumericLiteral", value: 1 },
-								right: { type: "NumericLiteral", value: 1 }
+								right: { type: "NumericLiteral", value: 1 },
 							},
-							right: { type: "NumericLiteral", value: 2 }
+							right: { type: "NumericLiteral", value: 2 },
 						};
 						break;
 					}
@@ -359,9 +359,9 @@ export class LuaObfuscator {
 								type: "BinaryExpression",
 								operator: "*",
 								left: { type: "NumericLiteral", value: 2 },
-								right: { type: "NumericLiteral", value: 3 }
+								right: { type: "NumericLiteral", value: 3 },
 							},
-							right: { type: "NumericLiteral", value: 5 }
+							right: { type: "NumericLiteral", value: 5 },
 						};
 						break;
 					}
@@ -374,9 +374,9 @@ export class LuaObfuscator {
 								type: "BinaryExpression",
 								operator: "-",
 								left: { type: "NumericLiteral", value: 10 },
-								right: { type: "NumericLiteral", value: 5 }
+								right: { type: "NumericLiteral", value: 5 },
 							},
-							right: { type: "NumericLiteral", value: 5 }
+							right: { type: "NumericLiteral", value: 5 },
 						};
 						break;
 					}
@@ -391,7 +391,7 @@ export class LuaObfuscator {
 						type: "LogicalExpression",
 						operator: "and",
 						left: opaquePredicate,
-						right: originalCondition
+						right: originalCondition,
 					};
 					node.wasObfuscated = true;
 				}
@@ -411,9 +411,9 @@ export class LuaObfuscator {
 						type: "BinaryExpression",
 						operator: "*",
 						left: { type: "NumericLiteral", value: 1 },
-						right: { type: "NumericLiteral", value: 1 }
+						right: { type: "NumericLiteral", value: 1 },
 					},
-					right: { type: "NumericLiteral", value: 0 }
+					right: { type: "NumericLiteral", value: 0 },
 				};
 
 				// Wrap condition with opaque predicate
@@ -422,7 +422,7 @@ export class LuaObfuscator {
 					type: "LogicalExpression",
 					operator: "and",
 					left: opaquePredicate,
-					right: originalCondition
+					right: originalCondition,
 				};
 				node.wasObfuscated = true;
 			}
@@ -444,7 +444,7 @@ export class LuaObfuscator {
 
 		// Recursively walk children
 		if (Array.isArray(node)) {
-			return node.map((child) => this.walkAST(child, transform));
+			return node.map(child => this.walkAST(child, transform));
 		}
 
 		for (const key in node) {

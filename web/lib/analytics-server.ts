@@ -20,36 +20,36 @@ const API_SECRET = process.env.GA_MEASUREMENT_PROTOCOL_API_SECRET;
  * Define custom parameters for your events
  */
 export interface GA4EventParams {
-  // Standard e-commerce parameters
-  value?: number;
-  currency?: string;
+	// Standard e-commerce parameters
+	value?: number;
+	currency?: string;
 
-  // Custom parameters for Lua Obfuscator
-  obfuscation_type?: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
-  code_size?: number;
-  protection_level?: number;
+	// Custom parameters for Lua Obfuscator
+	obfuscation_type?: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
+	code_size?: number;
+	protection_level?: number;
 
-  // Generic custom parameters
-  [key: string]: string | number | boolean | undefined;
+	// Generic custom parameters
+	[key: string]: string | number | boolean | undefined;
 }
 
 /**
  * GA4 Event structure
  */
 export interface GA4Event {
-  name: string;
-  params?: GA4EventParams;
+	name: string;
+	params?: GA4EventParams;
 }
 
 /**
  * GA4 Measurement Protocol payload
  */
 interface GA4Payload {
-  client_id: string;
-  user_id?: string;
-  timestamp_micros?: number;
-  user_properties?: Record<string, { value: string | number | boolean }>;
-  events: GA4Event[];
+	client_id: string;
+	user_id?: string;
+	timestamp_micros?: number;
+	user_properties?: Record<string, { value: string | number | boolean }>;
+	events: GA4Event[];
 }
 
 /**
@@ -76,68 +76,68 @@ interface GA4Payload {
  * ```
  */
 export async function sendGA4Event(
-  clientId: string,
-  events: GA4Event[],
-  userId?: string
+	clientId: string,
+	events: GA4Event[],
+	userId?: string
 ): Promise<{ success: boolean; error?: string }> {
-  // Validate configuration
-  if (!MEASUREMENT_ID || !API_SECRET) {
-    console.error("[GA4] Missing configuration: MEASUREMENT_ID or API_SECRET");
-    return {
-      success: false,
-      error: "GA4 configuration missing"
-    };
-  }
+	// Validate configuration
+	if (!MEASUREMENT_ID || !API_SECRET) {
+		console.error("[GA4] Missing configuration: MEASUREMENT_ID or API_SECRET");
+		return {
+			success: false,
+			error: "GA4 configuration missing",
+		};
+	}
 
-  // Build payload
-  const payload: GA4Payload = {
-    client_id: clientId,
-    events: events.map(event => ({
-      name: event.name,
-      params: {
-        ...event.params,
-        // Add engagement time for better reporting
-        engagement_time_msec: event.params?.engagement_time_msec || 100,
-      },
-    })),
-  };
+	// Build payload
+	const payload: GA4Payload = {
+		client_id: clientId,
+		events: events.map(event => ({
+			name: event.name,
+			params: {
+				...event.params,
+				// Add engagement time for better reporting
+				engagement_time_msec: event.params?.engagement_time_msec || 100,
+			},
+		})),
+	};
 
-  // Add optional user ID
-  if (userId) {
-    payload.user_id = userId;
-  }
+	// Add optional user ID
+	if (userId) {
+		payload.user_id = userId;
+	}
 
-  // Add timestamp
-  payload.timestamp_micros = Date.now() * 1000;
+	// Add timestamp
+	payload.timestamp_micros = Date.now() * 1000;
 
-  try {
-    const url = `${GA4_ENDPOINT}?measurement_id=${MEASUREMENT_ID}&api_secret=${API_SECRET}`;
+	try {
+		const url = `${GA4_ENDPOINT}?measurement_id=${MEASUREMENT_ID}&api_secret=${API_SECRET}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[GA4] Failed to send event:", response.status, errorText);
-      return {
-        success: false,
-        error: `HTTP ${response.status}: ${errorText}`,
-      };
-    }
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error("[GA4] Failed to send event:", response.status, errorText);
+			return {
+				success: false,
+				error: `HTTP ${response.status}: ${errorText}`,
+			};
+		}
 
-    return { success: true };
-  } catch (error) {
-    console.error("[GA4] Error sending event:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+		return { success: true };
+	} catch (error) {
+		console.error("[GA4] Error sending event:", error);
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
 }
 
 /**
@@ -145,7 +145,7 @@ export async function sendGA4Event(
  * Use this if you don't have a client ID from cookies
  */
 export function generateClientId(): string {
-  return randomUUID();
+	return randomUUID();
 }
 
 /**
@@ -162,68 +162,68 @@ export function generateClientId(): string {
  * ```
  */
 export async function trackObfuscation(params: {
-  clientId: string;
-  obfuscationType: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
-  codeSize: number;
-  protectionLevel: number;
-  userId?: string;
+	clientId: string;
+	obfuscationType: "mangle" | "encode" | "minify" | "mangle_encode" | "full";
+	codeSize: number;
+	protectionLevel: number;
+	userId?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  return sendGA4Event(
-    params.clientId,
-    [
-      {
-        name: "obfuscate_code",
-        params: {
-          obfuscation_type: params.obfuscationType,
-          code_size: params.codeSize,
-          protection_level: params.protectionLevel,
-        },
-      },
-    ],
-    params.userId
-  );
+	return sendGA4Event(
+		params.clientId,
+		[
+			{
+				name: "obfuscate_code",
+				params: {
+					obfuscation_type: params.obfuscationType,
+					code_size: params.codeSize,
+					protection_level: params.protectionLevel,
+				},
+			},
+		],
+		params.userId
+	);
 }
 
 /**
  * Helper function to track code downloads
  */
 export async function trackDownload(params: {
-  clientId: string;
-  codeSize: number;
-  userId?: string;
+	clientId: string;
+	codeSize: number;
+	userId?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  return sendGA4Event(
-    params.clientId,
-    [
-      {
-        name: "download_obfuscated_code",
-        params: {
-          code_size: params.codeSize,
-        },
-      },
-    ],
-    params.userId
-  );
+	return sendGA4Event(
+		params.clientId,
+		[
+			{
+				name: "download_obfuscated_code",
+				params: {
+					code_size: params.codeSize,
+				},
+			},
+		],
+		params.userId
+	);
 }
 
 /**
  * Helper function to track code copy events
  */
 export async function trackCopy(params: {
-  clientId: string;
-  codeSize: number;
-  userId?: string;
+	clientId: string;
+	codeSize: number;
+	userId?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  return sendGA4Event(
-    params.clientId,
-    [
-      {
-        name: "copy_obfuscated_code",
-        params: {
-          code_size: params.codeSize,
-        },
-      },
-    ],
-    params.userId
-  );
+	return sendGA4Event(
+		params.clientId,
+		[
+			{
+				name: "copy_obfuscated_code",
+				params: {
+					code_size: params.codeSize,
+				},
+			},
+		],
+		params.userId
+	);
 }

@@ -1,4 +1,4 @@
-  # LUA-Obfuscator Test Suite
+# LUA-Obfuscator Test Suite
 
 Comprehensive test coverage for the Lua obfuscation library.
 
@@ -59,6 +59,7 @@ __tests__/
 - ✅ Error message generation
 
 **Key Test Cases**:
+
 - Simple declarations
 - Complex programs
 - Syntax errors
@@ -70,6 +71,7 @@ __tests__/
 **Coverage**: ~95% of obfuscator.ts
 
 #### Name Mangling
+
 - ✅ Local variable renaming
 - ✅ Function parameter renaming
 - ✅ Global function preservation (print, require, pairs, etc.)
@@ -78,6 +80,7 @@ __tests__/
 - ✅ Library preservation (math, string, table, etc.)
 
 #### String Encoding
+
 - ✅ Simple string encoding
 - ✅ Special characters handling
 - ✅ Unicode support
@@ -85,6 +88,7 @@ __tests__/
 - ⚠️ **Known Issue**: Encoded strings may not generate proper decoder functions
 
 #### Minification
+
 - ✅ Single-line comment removal
 - ✅ Multi-line comment removal
 - ✅ Inline comment removal
@@ -92,16 +96,19 @@ __tests__/
 - ✅ String content preservation
 
 #### Combined Techniques
+
 - ✅ All options enabled
 - ✅ Selective option combinations
 - ✅ State reset between obfuscations
 
 #### Error Handling
+
 - ✅ Invalid syntax detection
 - ✅ Graceful failure
 - ✅ Meaningful error messages
 
 #### Edge Cases
+
 - ✅ Empty code
 - ✅ Very long code
 - ✅ Deeply nested structures
@@ -112,6 +119,7 @@ __tests__/
 **Coverage**: ~95% of generator.ts
 
 #### Node Types (20+ covered)
+
 - ✅ Variable declarations
 - ✅ Function declarations
 - ✅ String literals (all quote styles)
@@ -126,6 +134,7 @@ __tests__/
 - ✅ Break statements
 
 #### Special Cases
+
 - ✅ Empty tables
 - ✅ Nested structures
 - ✅ Unknown node types (warns gracefully)
@@ -137,28 +146,33 @@ __tests__/
 **Coverage**: End-to-end workflows
 
 #### Full Pipeline
+
 - ✅ Simple code obfuscation
 - ✅ Complex program obfuscation
 - ✅ All option combinations
 - ✅ Round-trip validation (obfuscate → parse → success)
 
 #### Semantic Preservation
+
 - ✅ Variable scoping
 - ✅ Function closures
 - ✅ Return values
 - ✅ Global preservation
 
 #### Error Handling
+
 - ✅ Invalid input handling
 - ✅ Parse error propagation
 - ✅ Meaningful error messages
 
 #### Performance
+
 - ✅ Moderate-sized programs
 - ✅ Nested structures
 - ✅ Complex tables
 
 #### Idempotency
+
 - ✅ Same input → same output with same options
 
 ## Test Fixtures
@@ -166,6 +180,7 @@ __tests__/
 `lua-samples.ts` provides comprehensive test data:
 
 ### Valid Lua Code
+
 - **Simple**: Variables, strings, functions
 - **Complex**: Tables, loops, conditionals, closures
 - **Strings**: All quote styles, escapes, unicode
@@ -178,12 +193,14 @@ __tests__/
 - **Programs**: Fibonacci, factorial, quicksort
 
 ### Invalid Lua Code
+
 - Incomplete statements
 - Unclosed functions/strings
 - Invalid keywords
 - Missing/extra end statements
 
 ### Edge Cases
+
 - Empty strings
 - Whitespace only
 - Long identifiers
@@ -192,6 +209,7 @@ __tests__/
 - Many variables
 
 ### Global Functions List
+
 All Lua standard library globals that should never be mangled:
 `print`, `require`, `pairs`, `ipairs`, `tonumber`, `tostring`, `type`, `math`, `string`, `table`, `io`, `os`, `debug`, `coroutine`, etc.
 
@@ -211,6 +229,7 @@ Target coverage thresholds (configured in jest.config.js):
 ## Known Issues & Limitations
 
 ### String Encoding Bug
+
 **Status**: Detected by tests, not yet fixed
 
 **Description**: The obfuscator sets `node.encodedValue` and `node.wasEncoded` on string nodes, but the generator doesn't check for these properties. This means string encoding doesn't actually produce encoded output.
@@ -218,6 +237,7 @@ Target coverage thresholds (configured in jest.config.js):
 **Test Coverage**: The tests document the expected behavior and will pass/fail appropriately when the feature is implemented.
 
 **Expected Fix**: Generator should detect `node.wasEncoded` and generate Lua code like:
+
 ```lua
 string.char(unpack({72, 101, 108, 108, 111})) -- "Hello"
 ```
@@ -227,37 +247,37 @@ string.char(unpack({72, 101, 108, 108, 111})) -- "Hello"
 ### Test Structure Template
 
 ```typescript
-describe('Feature Name', () => {
-  describe('Happy Path', () => {
-    test('should handle basic case', () => {
-      // Arrange
-      const input = 'test code';
+describe("Feature Name", () => {
+	describe("Happy Path", () => {
+		test("should handle basic case", () => {
+			// Arrange
+			const input = "test code";
 
-      // Act
-      const result = functionUnderTest(input);
+			// Act
+			const result = functionUnderTest(input);
 
-      // Assert
-      expect(result.success).toBe(true);
-      expect(result.value).toBeDefined();
-    });
-  });
+			// Assert
+			expect(result.success).toBe(true);
+			expect(result.value).toBeDefined();
+		});
+	});
 
-  describe('Error Conditions', () => {
-    test('should fail gracefully on invalid input', () => {
-      const invalid = 'bad input';
-      const result = functionUnderTest(invalid);
+	describe("Error Conditions", () => {
+		test("should fail gracefully on invalid input", () => {
+			const invalid = "bad input";
+			const result = functionUnderTest(invalid);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-  });
+			expect(result.success).toBe(false);
+			expect(result.error).toBeDefined();
+		});
+	});
 
-  describe('Edge Cases', () => {
-    test('should handle empty input', () => {
-      const result = functionUnderTest('');
-      expect(result).toBeDefined();
-    });
-  });
+	describe("Edge Cases", () => {
+		test("should handle empty input", () => {
+			const result = functionUnderTest("");
+			expect(result).toBeDefined();
+		});
+	});
 });
 ```
 
@@ -284,6 +304,7 @@ describe('Feature Name', () => {
 ### Common Issues
 
 **Test fails with "Cannot find module"**
+
 ```bash
 # Clear Jest cache
 npx jest --clearCache
@@ -291,6 +312,7 @@ npm test
 ```
 
 **Coverage not updating**
+
 ```bash
 # Delete coverage directory
 rm -rf coverage/
@@ -298,6 +320,7 @@ npm run test:coverage
 ```
 
 **Tests timing out**
+
 ```bash
 # Increase timeout in specific test
 test('long running test', async () => {
@@ -342,6 +365,7 @@ When adding new features:
 ## Questions?
 
 For questions or issues with tests:
+
 1. Check this README
 2. Review existing test patterns
 3. Run tests with `--verbose` flag for more details
