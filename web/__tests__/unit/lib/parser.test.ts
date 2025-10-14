@@ -132,6 +132,35 @@ describe("parseLua", () => {
 			expect(typeof result.error).toBe("string");
 			expect(result.error!.length).toBeGreaterThan(0);
 		});
+
+		test("should extract line and column information from parse errors", () => {
+			// Test with code that has a clear syntax error
+			const result = parseLua("local x = 1\nend");
+
+			expect(result.success).toBe(false);
+			expect(result.errorDetails).toBeDefined();
+			expect(result.errorDetails?.message).toBeDefined();
+			expect(result.errorDetails?.line).toBeDefined();
+			expect(result.errorDetails?.line).toBeGreaterThan(0);
+		});
+
+		test("should include error details with line information", () => {
+			const result = parseLua("function test()\n  return\nend end");
+
+			expect(result.success).toBe(false);
+			expect(result.errorDetails).toBeDefined();
+			if (result.errorDetails?.line) {
+				expect(result.errorDetails.line).toBeGreaterThan(0);
+			}
+		});
+
+		test("should provide error details for unclosed string", () => {
+			const result = parseLua('local msg = "unclosed string');
+
+			expect(result.success).toBe(false);
+			expect(result.errorDetails).toBeDefined();
+			expect(result.errorDetails?.message).toBeDefined();
+		});
 	});
 
 	describe("Edge Cases", () => {

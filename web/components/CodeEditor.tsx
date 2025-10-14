@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
+import type { ParseError } from "@/lib/parser";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
 	ssr: false,
@@ -30,20 +31,30 @@ interface CodeEditorProps {
 	language?: string;
 	readOnly?: boolean;
 	height?: string;
+	error?: ParseError;
 }
 
 /**
  * CodeEditor component with Monaco editor integration.
- * Features custom theming, Lua syntax highlighting, and JetBrains Mono font with ligatures.
+ * Features custom theming, Lua syntax highlighting, inline error markers, and JetBrains Mono font with ligatures.
  *
  * @param value - The code content to display
  * @param onChange - Callback function when code changes
  * @param language - Programming language for syntax highlighting (default: lua)
  * @param readOnly - Whether the editor is read-only
  * @param height - Height of the editor (default: 100%)
+ * @param error - Parse error with line/column information for inline display
  */
-export function CodeEditor({ value, onChange, language = "lua", readOnly = false, height = "100%" }: CodeEditorProps) {
+export function CodeEditor({
+	value,
+	onChange,
+	language = "lua",
+	readOnly = false,
+	height = "100%",
+	error,
+}: CodeEditorProps) {
 	const editorRef = useRef<any>(null);
+	const monacoRef = useRef<any>(null);
 
 	const handleEditorChange = (value: string | undefined) => {
 		if (onChange && value !== undefined) {
@@ -51,8 +62,39 @@ export function CodeEditor({ value, onChange, language = "lua", readOnly = false
 		}
 	};
 
+	// Update error markers when error changes
+	useEffect(() => {
+		if (!editorRef.current || !monacoRef.current) return;
+
+		const monaco = monacoRef.current;
+		const model = editorRef.current.getModel();
+		if (!model) return;
+
+		// Clear existing markers
+		monaco.editor.setModelMarkers(model, "lua-parser", []);
+
+		// Add new marker if error exists
+		if (error && error.line) {
+			const markers = [
+				{
+					startLineNumber: error.line,
+					startColumn: error.column || 1,
+					endLineNumber: error.line,
+					endColumn: error.column ? error.column + 10 : 1000, // Highlight to end of problematic area
+					message: error.message,
+					severity: monaco.MarkerSeverity.Error,
+				},
+			];
+			monaco.editor.setModelMarkers(model, "lua-parser", markers);
+
+			// Scroll to the error line
+			editorRef.current.revealLineInCenter(error.line);
+		}
+	}, [error]);
+
 	const handleEditorDidMount = (editor: any, monaco: any) => {
 		editorRef.current = editor;
+		monacoRef.current = monaco;
 
 		// Define custom theme matching the app design
 		monaco.editor.defineTheme("lua-obfuscator-dark", {
@@ -81,6 +123,9 @@ export function CodeEditor({ value, onChange, language = "lua", readOnly = false
 				"editorIndentGuide.background": "#1E293B",
 				"editorIndentGuide.activeBackground": "#334155",
 				"editorWhitespace.foreground": "#1E293B",
+				"editorError.foreground": "#EF4444",
+				"editorWarning.foreground": "#F59E0B",
+				"editorInfo.foreground": "#3B82F6",
 				"scrollbarSlider.background": "#1E293B80",
 				"scrollbarSlider.hoverBackground": "#334155B0",
 				"scrollbarSlider.activeBackground": "#475569E0",
@@ -98,6 +143,25 @@ export function CodeEditor({ value, onChange, language = "lua", readOnly = false
 		editor.onDidBlurEditorText(() => {
 			editor.updateOptions({ lineHighlightBackground: "#1E293B40" });
 		});
+
+		// Apply error marker if error exists on mount
+		if (error && error.line) {
+			const model = editor.getModel();
+			if (model) {
+				const markers = [
+					{
+						startLineNumber: error.line,
+						startColumn: error.column || 1,
+						endLineNumber: error.line,
+						endColumn: error.column ? error.column + 10 : 1000,
+						message: error.message,
+						severity: monaco.MarkerSeverity.Error,
+					},
+				];
+				monaco.editor.setModelMarkers(model, "lua-parser", markers);
+				editor.revealLineInCenter(error.line);
+			}
+		}
 	};
 
 	return (

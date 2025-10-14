@@ -24,51 +24,142 @@ import { CodeEditor } from "@/components/CodeEditor";
 import { obfuscateLua } from "@/lib/obfuscator-simple";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
 import { trackObfuscation, trackCopy, trackDownload } from "@/lib/analytics-client";
+import type { ParseError } from "@/lib/parser";
 
-const DEFAULT_LUA_CODE = `-- Advanced Lua Example
--- Demonstrates all obfuscation features
+const DEFAULT_LUA_CODE = `-- Advanced Game Inventory System
+-- Showcases: Tables, Metatables, Closures, Error Handling, Complex Logic
 
-local function calculateScore(basePoints, multiplier, bonus)
-  -- Number encoding will transform these literals
-  local maxScore = 1000
-  local minScore = 100
+local Inventory = {}
+Inventory.__index = Inventory
 
-  -- Control flow obfuscation adds complexity
-  if basePoints > 50 then
-    basePoints = basePoints * multiplier
-  else
-    basePoints = basePoints + bonus
-  end
-
-  -- String encoding protects text
-  local message = "Score calculated: "
-  local result = basePoints
-
-  -- Loop demonstrates control flow
-  local i = 0
-  while i < 3 do
-    result = result + 10
-    i = i + 1
-  end
-
-  -- Clamp result
-  if result > maxScore then
-    result = maxScore
-  elseif result < minScore then
-    result = minScore
-  end
-
-  print(message .. result)
-  return result
+-- Create new inventory with maximum capacity
+function Inventory.new(maxSlots, playerName)
+	local self = setmetatable({}, Inventory)
+	self.items = {}
+	self.maxSlots = maxSlots or 20
+	self.playerName = playerName or "Player"
+	self.gold = 0
+	self.locked = false
+	return self
 end
 
--- Variables and function calls show name mangling
-local playerScore = 75
-local scoreMultiplier = 2
-local bonusPoints = 25
+-- Add item with quantity validation
+function Inventory:addItem(itemName, quantity, rarity)
+	if self.locked then
+		return false, "Inventory is locked"
+	end
+	
+	local slot = #self.items + 1
+	if slot > self.maxSlots then
+		return false, "Inventory full"
+	end
+	
+	-- Create item with metadata
+	local item = {
+		name = itemName,
+		qty = quantity or 1,
+		rarity = rarity or "common",
+		timestamp = os.time(),
+		id = math.random(1000, 9999)
+	}
+	
+	-- Apply rarity multiplier
+	local multiplier = 1.0
+	if rarity == "rare" then
+		multiplier = 1.5
+	elseif rarity == "epic" then
+		multiplier = 2.0
+	elseif rarity == "legendary" then
+		multiplier = 3.0
+	end
+	
+	item.value = math.floor(quantity * 10 * multiplier)
+	table.insert(self.items, item)
+	
+	return true, "Added " .. itemName
+end
 
-local finalScore = calculateScore(playerScore, scoreMultiplier, bonusPoints)
-print("Final score: " .. finalScore)
+-- Calculate total inventory value
+function Inventory:getTotalValue()
+	local total = self.gold
+	local count = 0
+	
+	for i = 1, #self.items do
+		local item = self.items[i]
+		total = total + (item.value or 0)
+		count = count + 1
+	end
+	
+	return total, count
+end
+
+-- Find items by rarity with filtering
+function Inventory:findByRarity(targetRarity)
+	local matches = {}
+	local pattern = string.lower(targetRarity)
+	
+	for _, item in pairs(self.items) do
+		if string.lower(item.rarity) == pattern then
+			table.insert(matches, item.name)
+		end
+	end
+	
+	return matches
+end
+
+-- Sell item with price calculation
+function Inventory:sellItem(index)
+	if index < 1 or index > #self.items then
+		return false
+	end
+	
+	local item = table.remove(self.items, index)
+	local salePrice = math.floor(item.value * 0.75)
+	self.gold = self.gold + salePrice
+	
+	return true, salePrice
+end
+
+-- Protected transaction with error handling
+function Inventory:safeTransaction(callback)
+	self.locked = true
+	
+	local success, result = pcall(function()
+		return callback(self)
+	end)
+	
+	self.locked = false
+	return success, result
+end
+
+-- Initialize player inventory
+local playerInventory = Inventory.new(25, "Hero")
+
+-- Add various items
+playerInventory:addItem("Health Potion", 5, "common")
+playerInventory:addItem("Mana Crystal", 3, "rare")
+playerInventory:addItem("Dragon Scale", 1, "legendary")
+playerInventory:addItem("Iron Sword", 1, "epic")
+playerInventory:addItem("Gold Coins", 100, "common")
+
+-- Calculate statistics
+local totalValue, itemCount = playerInventory:getTotalValue()
+print("Inventory Value: " .. totalValue .. " gold")
+print("Total Items: " .. itemCount)
+
+-- Find legendary items
+local legendaries = playerInventory:findByRarity("legendary")
+print("Legendary Items: " .. table.concat(legendaries, ", "))
+
+-- Perform safe transaction
+local success, price = playerInventory:safeTransaction(function(inv)
+	return inv:sellItem(2)
+end)
+
+if success then
+	print("Sold item for " .. price .. " gold")
+	print("New Balance: " .. playerInventory.gold .. " gold")
+end
 `;
 
 interface ObfuscatorSettings {
@@ -85,6 +176,7 @@ export default function Home() {
 	const [outputCode, setOutputCode] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [inputError, setInputError] = useState<ParseError | undefined>(undefined);
 	const [copySuccess, setCopySuccess] = useState(false);
 	const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
@@ -106,9 +198,18 @@ export default function Home() {
 		}
 	}, [outputCode, error]);
 
+	// Clear input error when user starts typing to fix it
+	const handleInputChange = (newCode: string) => {
+		setInputCode(newCode);
+		if (inputError) {
+			setInputError(undefined);
+		}
+	};
+
 	const obfuscateCode = () => {
 		setIsProcessing(true);
 		setError(null);
+		setInputError(undefined);
 		setCopySuccess(false);
 
 		setTimeout(() => {
@@ -124,6 +225,7 @@ export default function Home() {
 			if (result.success && result.code) {
 				setOutputCode(result.code);
 				setError(null);
+				setInputError(undefined);
 
 				// Track obfuscation event
 				const obfuscationType =
@@ -144,6 +246,7 @@ export default function Home() {
 				}).catch(err => console.error("Analytics tracking failed:", err));
 			} else {
 				setError(result.error || "Failed to obfuscate code");
+				setInputError(result.errorDetails);
 				setOutputCode("");
 			}
 
@@ -307,7 +410,7 @@ export default function Home() {
 									</div>
 								</div>
 								<div className="flex-1 min-h-0">
-									<CodeEditor value={inputCode} onChange={setInputCode} />
+									<CodeEditor value={inputCode} onChange={handleInputChange} error={inputError} />
 								</div>
 							</Card>
 						</section>
