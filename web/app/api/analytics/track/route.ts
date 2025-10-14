@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendGA4Event, type GA4Event } from "@/lib/analytics-server";
 import { headers } from "next/headers";
+import { analyticsRateLimiter } from "@/lib/rate-limiter";
 
 /**
  * Request body interface
@@ -43,6 +44,30 @@ interface TrackEventRequest {
  */
 export async function POST(request: NextRequest) {
 	try {
+		// Apply rate limiting based on IP address
+		const ip = request.ip ?? request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+		const rateLimitResult = analyticsRateLimiter.check(ip);
+
+		if (!rateLimitResult.success) {
+			const resetInSeconds = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
+			return NextResponse.json(
+				{
+					error: "Rate limit exceeded",
+					message: `Too many requests. Please try again in ${resetInSeconds} seconds.`,
+					retryAfter: resetInSeconds,
+				},
+				{
+					status: 429,
+					headers: {
+						"Retry-After": resetInSeconds.toString(),
+						"X-RateLimit-Limit": "100",
+						"X-RateLimit-Remaining": "0",
+						"X-RateLimit-Reset": rateLimitResult.resetAt.toString(),
+					},
+				},
+			);
+		}
+
 		// Get content type
 		const contentType = request.headers.get("content-type");
 		if (!contentType?.includes("application/json")) {
@@ -85,8 +110,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Failed to track event", details: result.error }, { status: 500 });
 		}
 
-		// Return success
-		return NextResponse.json({ success: true });
+		// Return success with rate limit headers
+		return NextResponse.json(
+			{ success: true },
+			{
+				headers: {
+					"X-RateLimit-Limit": "100",
+					"X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+					"X-RateLimit-Reset": rateLimitResult.resetAt.toString(),
+				},
+			},
+		);
 	} catch (error) {
 		console.error("[API] Error processing track request:", error);
 		return NextResponse.json({ error: "Internal server error" }, { status: 500 });

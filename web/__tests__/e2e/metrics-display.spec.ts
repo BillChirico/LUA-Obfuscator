@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { UIHelper } from "./helpers";
 
 /**
  * E2E tests for obfuscation metrics display
@@ -113,13 +114,14 @@ test.describe("Metrics Display", () => {
 		});
 
 		test("should show encryption algorithm in metrics", async ({ page }) => {
+			const ui = new UIHelper(page);
+
 			// Enable string encoding
 			await page.getByLabel(/Encode Strings/i).click();
+			await page.waitForTimeout(300);
 
-			// Select XOR
-			const encryptionTrigger = page.getByLabel("Encryption Algorithm").locator("..").locator("button").first();
-			await encryptionTrigger.click();
-			await page.getByRole("option", { name: "XOR Cipher" }).click();
+			// Select XOR using helper
+			await ui.selectOption("Encryption Algorithm", "XOR Cipher");
 
 			await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
 			await page.waitForTimeout(500);

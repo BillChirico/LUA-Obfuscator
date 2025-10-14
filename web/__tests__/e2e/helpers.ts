@@ -214,6 +214,56 @@ export class UIHelper {
 			return false;
 		}
 	}
+
+	/**
+	 * Get Select component trigger by nearby label text
+	 * Works with shadcn Select components
+	 */
+	async getSelectTrigger(labelText: string): Promise<Locator> {
+		// Find the label, then find the next Select trigger button
+		const label = this.page.locator(`label:has-text("${labelText}")`);
+		await label.waitFor({ state: "visible", timeout: 5000 });
+
+		// Get the parent container and find the SelectTrigger button
+		const container = label.locator("..");
+		const trigger = container.locator('button[role="combobox"]').first();
+		await trigger.waitFor({ state: "visible", timeout: 5000 });
+
+		return trigger;
+	}
+
+	/**
+	 * Select an option from a Select dropdown
+	 * @param labelText The label text near the Select component
+	 * @param optionText The text of the option to select
+	 */
+	async selectOption(labelText: string, optionText: string): Promise<void> {
+		const trigger = await this.getSelectTrigger(labelText);
+
+		// Click to open dropdown
+		await trigger.click();
+		await this.page.waitForTimeout(300);
+
+		// Click the option
+		const option = this.page.getByRole("option", { name: optionText });
+		await option.waitFor({ state: "visible", timeout: 5000 });
+		await option.click();
+		await this.page.waitForTimeout(300);
+	}
+
+	/**
+	 * Check if a Select component is disabled
+	 */
+	async isSelectDisabled(labelText: string): Promise<boolean> {
+		try {
+			const trigger = await this.getSelectTrigger(labelText);
+			const disabled = await trigger.getAttribute("disabled");
+			const ariaDisabled = await trigger.getAttribute("aria-disabled");
+			return disabled !== null || ariaDisabled === "true";
+		} catch {
+			return true;
+		}
+	}
 }
 
 /**

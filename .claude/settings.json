@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "command": "osascript -e \"display notification \\\"$(jq -r .message)\\\" with title \\\"$(jq -r .title)\\\" sound name \\\"Glass\\\"\"",
+        "type": "command"
+      }
+    ]
+  }
+}

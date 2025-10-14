@@ -26,16 +26,13 @@ test.describe("Advanced Features v1.1", () => {
 		});
 
 		test("should have correct encryption options", async ({ page }) => {
-			const ui = new UIHelper(page);
-
 			// Enable string encoding first (encryption requires it)
 			const encodeStringsSwitch = page.getByLabel(/Encode Strings/i);
 			await encodeStringsSwitch.click();
 
 			// Open encryption dropdown
-			const encryptionTrigger = await ui.getSelectTrigger("Encryption Algorithm");
+			const encryptionTrigger = page.getByLabel("Encryption Algorithm").locator("..").locator("button").first();
 			await encryptionTrigger.click();
-		await page.waitForTimeout(300);
 
 			// Check options are present
 			await expect(page.getByRole("option", { name: "None (Basic)" })).toBeVisible();
@@ -239,12 +236,9 @@ test.describe("Advanced Features v1.1", () => {
 		});
 
 		test("should have all formatting options", async ({ page }) => {
-			const ui = new UIHelper(page);
-
-			// Open formatting dropdown using helper
-			const formattingTrigger = await ui.getSelectTrigger("Code Style");
+			// Open formatting dropdown
+			const formattingTrigger = page.getByLabel("Code Style").locator("..").locator("button").first();
 			await formattingTrigger.click();
-		await page.waitForTimeout(300);
 
 			// Check options
 			await expect(page.getByRole("option", { name: "Minified (Compact)" })).toBeVisible();
@@ -411,15 +405,12 @@ test.describe("Advanced Features v1.1", () => {
 		});
 
 		test("should enable dropdown when Encode Strings is on", async ({ page }) => {
-			const ui = new UIHelper(page);
-
 			// Turn on Encode Strings
 			await page.getByLabel(/Encode Strings/i).click();
-		await page.waitForTimeout(300);
 
 			// Encryption dropdown should now be enabled
-			const isDisabled = await ui.isSelectDisabled("Encryption Algorithm");
-			expect(isDisabled).toBe(false);
+			const encryptionTrigger = page.getByLabel("Encryption Algorithm").locator("..").locator("button").first();
+			await expect(encryptionTrigger).toBeEnabled();
 		});
 	});
 
@@ -446,20 +437,17 @@ test.describe("Advanced Features v1.1", () => {
 		});
 
 		test("should work dropdowns on touch devices", async ({ page }) => {
-			const ui = new UIHelper(page);
 			await page.setViewportSize({ width: 375, height: 667 });
 
 			// Enable string encoding
 			await page.getByLabel(/Encode Strings/i).click();
-		await page.waitForTimeout(300);
 
 			// Scroll to encryption dropdown
 			await page.getByText("Encryption Algorithm").scrollIntoViewIfNeeded();
 
 			// Tap encryption dropdown
-			const encryptionTrigger = await ui.getSelectTrigger("Encryption Algorithm");
+			const encryptionTrigger = page.getByLabel("Encryption Algorithm").locator("..").locator("button").first();
 			await encryptionTrigger.click();
-		await page.waitForTimeout(300);
 
 			// Options should be visible
 			await expect(page.getByRole("option", { name: "XOR Cipher" })).toBeVisible();

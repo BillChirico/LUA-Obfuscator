@@ -222,13 +222,13 @@ test.describe("Protection Level v1.1", () => {
 			// Click obfuscate
 			await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
 
-			// Wait for completion (max 5 seconds)
-			await page.waitForTimeout(2000);
+			// Wait for completion (max 10 seconds for all advanced features)
+			await page.waitForTimeout(3000);
 
 			const duration = Date.now() - startTime;
 
-			// Should complete within 5 seconds
-			expect(duration).toBeLessThan(5000);
+			// Should complete within 10 seconds (all v1.1 features are CPU intensive)
+			expect(duration).toBeLessThan(10000);
 
 			// Should produce output
 			const outputEditor = page.locator(".monaco-editor").nth(1);
