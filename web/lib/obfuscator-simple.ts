@@ -138,6 +138,48 @@ export class LuaObfuscator {
 			"os",
 			"debug",
 			"coroutine",
+			// String library functions (used by string encoding)
+			"char",
+			"byte",
+			"find",
+			"format",
+			"gmatch",
+			"gsub",
+			"len",
+			"lower",
+			"match",
+			"rep",
+			"reverse",
+			"sub",
+			"upper",
+			// Table library functions
+			"insert",
+			"remove",
+			"sort",
+			"concat",
+			// Math library functions
+			"abs",
+			"acos",
+			"asin",
+			"atan",
+			"ceil",
+			"cos",
+			"deg",
+			"exp",
+			"floor",
+			"fmod",
+			"log",
+			"max",
+			"min",
+			"modf",
+			"pi",
+			"pow",
+			"rad",
+			"random",
+			"randomseed",
+			"sin",
+			"sqrt",
+			"tan",
 		]);
 
 		// Find all identifiers (variable/function names)
@@ -190,14 +232,23 @@ export class LuaObfuscator {
 			}
 
 			// Protection level controls encoding probability (0-100%)
-			// 0% = no encoding, 100% = encode all numbers
-			const shouldEncode = Math.random() * 100 < protectionLevel;
+			// At 100%, always encode. Below 100%, use randomization.
+			let shouldEncode: boolean;
+			if (protectionLevel >= 100) {
+				shouldEncode = true;
+			} else if (protectionLevel <= 0) {
+				shouldEncode = false;
+			} else {
+				shouldEncode = Math.random() * 100 < protectionLevel;
+			}
+
 			if (!shouldEncode) {
 				return match;
 			}
 
 			// Use various encoding strategies randomly
-			const strategy = Math.floor(Math.random() * 4);
+			// Note: Using only arithmetic operations for Lua 5.1/5.2 compatibility
+			const strategy = Math.floor(Math.random() * 3);
 
 			switch (strategy) {
 				case 0: {
@@ -212,21 +263,17 @@ export class LuaObfuscator {
 					return `(${num * multiplier} / ${multiplier})`;
 				}
 				case 2: {
-					// Strategy 3: Add and subtract (e.g., 100 becomes 150 - 50)
-					const offset = 10 + Math.floor(Math.random() * 90); // 10-99
-					return `(${num + offset} - ${offset})`;
-				}
-				case 3: {
-					// Strategy 4: Bitwise XOR (e.g., 100 becomes 173 ^ 205)
-					// Only for integers
+					// Strategy 3: Multiply by factor and adjust (e.g., 3.14 becomes 31.4 / 10)
+					// This avoids substring issues like 3.14 appearing in 53.14
 					if (Number.isInteger(num)) {
-						const xorKey = Math.floor(Math.random() * 256);
-						return `(${num ^ xorKey} ~ ${xorKey})`;
+						// For integers, use add and subtract
+						const offset = 10 + Math.floor(Math.random() * 90); // 10-99
+						return `(${num + offset} - ${offset})`;
+					} else {
+						// For decimals, use multiplication by 10, 100, or 1000 and then division
+						const multiplier = Math.pow(10, 1 + Math.floor(Math.random() * 2)); // 10 or 100
+						return `(${num * multiplier} / ${multiplier})`;
 					}
-					// Fallback to strategy 0 for decimals
-					const half = Math.floor(num / 2);
-					const remainder = num - half;
-					return `(${half} + ${remainder})`;
 				}
 				default:
 					return match;
@@ -235,17 +282,22 @@ export class LuaObfuscator {
 	}
 
 	private obfuscateControlFlow(code: string, protectionLevel: number): string {
+		// Helper function to determine if we should obfuscate based on protection level
+		const shouldObfuscate = (): boolean => {
+			if (protectionLevel >= 100) return true;
+			if (protectionLevel <= 0) return false;
+			return Math.random() * 100 < protectionLevel;
+		};
+
 		// Add opaque predicates to if statements
 		// Match: if <condition> then
 		const ifPattern = /\bif\s+(.+?)\s+then\b/g;
 		code = code.replace(ifPattern, (match, condition) => {
-			// Protection level controls obfuscation probability (0-100%)
-			const shouldObfuscate = Math.random() * 100 < protectionLevel;
-			if (!shouldObfuscate) {
+			if (!shouldObfuscate()) {
 				return match;
 			}
 
-			const opaquePredicates = ["(1 + 1 == 2)", "(2 * 3 > 5)", "(10 - 5 == 5)", "(true or false)"];
+			const opaquePredicates = ["(1 + 1 == 2)", "(2 * 3 > 5)", "(true or false)", "(5 == 5)"];
 			const opaque = opaquePredicates[Math.floor(Math.random() * opaquePredicates.length)];
 			return `if ${opaque} and ${condition} then`;
 		});
@@ -254,8 +306,7 @@ export class LuaObfuscator {
 		// Match: while <condition> do
 		const whilePattern = /\bwhile\s+(.+?)\s+do\b/g;
 		code = code.replace(whilePattern, (match, condition) => {
-			const shouldObfuscate = Math.random() * 100 < protectionLevel;
-			if (!shouldObfuscate) {
+			if (!shouldObfuscate()) {
 				return match;
 			}
 
@@ -267,8 +318,7 @@ export class LuaObfuscator {
 		// Match: until <condition>
 		const untilPattern = /\buntil\s+(.+?)(?=\n|$)/g;
 		code = code.replace(untilPattern, (match, condition) => {
-			const shouldObfuscate = Math.random() * 100 < protectionLevel;
-			if (!shouldObfuscate) {
+			if (!shouldObfuscate()) {
 				return match;
 			}
 
@@ -378,6 +428,28 @@ export class LuaObfuscator {
  * @returns Obfuscation result with code on success or error details on failure
  */
 export function obfuscateLua(code: string, options?: ObfuscationOptions): ObfuscationResult {
+	// Map protection level to specific obfuscation techniques
+	// If individual options are provided, they override the protection level mapping
+	const protectionLevel = options?.protectionLevel ?? 50;
+
+	// Default options based on protection level
+	const defaultOptions: ObfuscationOptions = {
+		mangleNames: protectionLevel >= 20,
+		encodeStrings: protectionLevel >= 40,
+		encodeNumbers: protectionLevel >= 60,
+		controlFlow: protectionLevel >= 80,
+		minify: protectionLevel >= 10,
+		protectionLevel: protectionLevel,
+	};
+
+	// Merge with user-provided options (user options take precedence)
+	const finalOptions: ObfuscationOptions = {
+		...defaultOptions,
+		...options,
+		// Ensure protectionLevel is preserved
+		protectionLevel: protectionLevel,
+	};
+
 	const obfuscator = new LuaObfuscator();
-	return obfuscator.obfuscate(code, options);
+	return obfuscator.obfuscate(code, finalOptions);
 }
