@@ -1,0 +1,13 @@
+# Lua Obfuscator - Robots.txt
+# Allow all crawlers to access the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://lua-obfuscator-sable.vercel.app/sitemap.xml
+
+# Disallow common non-content paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/

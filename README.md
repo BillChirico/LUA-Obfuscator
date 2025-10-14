@@ -12,7 +12,7 @@ A production-ready, web-based Lua code obfuscation tool that protects Lua source
 
 Bill's Lua Obfuscator is a **fully client-side** code protection tool designed for Lua developers working on game mods, addons, and scripts. All obfuscation happens in your browser—your code never leaves your machine, ensuring complete privacy and security.
 
-**Live Demo**: [https://lua-obfuscator-afaxlww2q-bill-chiricos-projects.vercel.app/](https://lua-obfuscator-afaxlww2q-bill-chiricos-projects.vercel.app/)
+**Live Demo**: [https://lua-obfuscator-sable.vercel.app/](https://lua-obfuscator-sable.vercel.app/)
 
 ### Key Highlights
 
