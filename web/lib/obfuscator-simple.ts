@@ -1,4 +1,4 @@
-import { parseLua } from "./parser";
+import { parseLua, ParseError } from "./parser";
 
 /**
  * Simplified Lua Obfuscator for MVP
@@ -12,6 +12,13 @@ export interface ObfuscationOptions {
 	controlFlow?: boolean;
 	minify?: boolean;
 	protectionLevel?: number;
+}
+
+export interface ObfuscationResult {
+	success: boolean;
+	code?: string;
+	error?: string;
+	errorDetails?: ParseError;
 }
 
 export class LuaObfuscator {
@@ -28,7 +35,7 @@ export class LuaObfuscator {
 			minify: true,
 			protectionLevel: 50,
 		}
-	): { success: boolean; code?: string; error?: string } {
+	): ObfuscationResult {
 		try {
 			// Reset state
 			this.nameMap.clear();
@@ -40,6 +47,7 @@ export class LuaObfuscator {
 				return {
 					success: false,
 					error: parseResult.error || "Invalid Lua syntax",
+					errorDetails: parseResult.errorDetails,
 				};
 			}
 
@@ -362,10 +370,14 @@ export class LuaObfuscator {
 	}
 }
 
-export function obfuscateLua(
-	code: string,
-	options?: ObfuscationOptions
-): { success: boolean; code?: string; error?: string } {
+/**
+ * Obfuscates Lua source code with configurable options.
+ *
+ * @param code - The Lua source code to obfuscate
+ * @param options - Obfuscation configuration options
+ * @returns Obfuscation result with code on success or error details on failure
+ */
+export function obfuscateLua(code: string, options?: ObfuscationOptions): ObfuscationResult {
 	const obfuscator = new LuaObfuscator();
 	return obfuscator.obfuscate(code, options);
 }

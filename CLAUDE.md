@@ -92,6 +92,19 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 - Leverage Lucide React icons exclusively (including for logos)
 - Only install new packages when absolutely necessary or explicitly requested
 
+**Design Principles & Patterns**
+
+- **Glassmorphism**: Frosted glass effects with backdrop-blur for depth
+- **Micro-interactions**: Smooth animations on hover, focus, and active states
+- **Gradient Aesthetics**: Rich, animated gradients with blend modes
+- **Visual Feedback**: Clear state indication through color, animation, and icons
+- **Smooth Motion**: Cubic-bezier easing (0.4, 0, 0.2, 1) for professional feel
+- **Accessibility First**: Focus states, reduced motion support, proper ARIA labels
+- **Performance**: GPU acceleration with `will-change-transform` on animated elements
+- **Color Coding**: Protection levels use gray/blue/purple/orange scale
+- **Typography**: JetBrains Mono with ligatures, optimized text rendering
+- **Spacing**: Consistent padding and gap scaling (0.75rem base radius)
+
 **UI/UX Implementation** ✅
 
 - ✅ Monaco code editor with Lua syntax highlighting
@@ -103,6 +116,24 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 - ✅ Error display with meaningful messages
 - ✅ Beautiful animated gradient background
 - ✅ Touch-friendly controls for mobile devices
+
+**Visual Refinements & Micro-interactions** ✅
+
+- ✅ Animated logo with glow effects and hover rotation
+- ✅ Button micro-interactions (scale, hover, press states)
+- ✅ Shimmer effect on primary action button
+- ✅ Icon animations (rotate, scale, translate)
+- ✅ Success notification overlay with auto-dismiss
+- ✅ Card hover effects with colored shadows
+- ✅ Active technique indicators with animated icons
+- ✅ Color-coded protection level badges
+- ✅ Custom Monaco theme matching app design
+- ✅ Enhanced loading states with gradient spinners
+- ✅ Smooth page load animations (fade-in, slide-in)
+- ✅ Glassmorphism effects throughout UI
+- ✅ Custom scrollbar styling
+- ✅ Enhanced focus and selection states
+- ✅ Reduced motion accessibility support
 
 ## Testing & Quality Assurance
 
@@ -295,10 +326,29 @@ web/
 
 1. **Write tests first** (TDD approach)
 2. **Update TypeScript types** if needed
-3. **Run Prettier** before committing (`npm run format`)
-4. **Verify all tests pass** (`npm run test:all`)
-5. **Test responsive behavior** on mobile, tablet, desktop
-6. **Update CLAUDE.md** if architecture changes
+3. **Add JSDoc documentation** to all functions and components
+4. **Include micro-interactions** (hover, focus, active states)
+5. **Apply design principles** (glassmorphism, smooth motion, visual feedback)
+6. **Ensure accessibility** (ARIA labels, focus states, reduced motion)
+7. **Run Prettier** before committing (`npm run format`)
+8. **Verify all tests pass** (`npm run test:all`)
+9. **Test responsive behavior** on mobile, tablet, desktop
+10. **Update CLAUDE.md** if architecture changes
+
+### Design Consistency Checklist
+
+When creating or modifying UI components:
+
+- ✅ Use cubic-bezier(0.4, 0, 0.2, 1) for smooth transitions
+- ✅ Add hover effects with scale transformations (1.02x)
+- ✅ Include active states with scale down (0.98x)
+- ✅ Apply backdrop-blur for glassmorphism effects
+- ✅ Use gradient backgrounds with proper opacity
+- ✅ Add icon animations (rotate, scale, translate)
+- ✅ Implement color-coded visual feedback
+- ✅ Include loading states with gradient spinners
+- ✅ Support reduced motion preference
+- ✅ Test focus states with keyboard navigation
 
 ### Performance Considerations
 
@@ -306,3 +356,35 @@ web/
 - Monaco editor uses dynamic import to reduce initial bundle size
 - Code is processed in chunks to maintain responsiveness
 - Analytics calls are fire-and-forget to avoid blocking UI
+- GPU-accelerated animations with `will-change-transform`
+- Smooth 60fps animations using cubic-bezier easing
+- Reduced motion support for accessibility
+
+### Custom Theming
+
+**Monaco Editor Theme** (`components/CodeEditor.tsx`)
+
+- Custom "lua-obfuscator-dark" theme matching app design
+- Transparent background to show gradient
+- Color palette: Purple keywords, green strings, amber numbers, blue functions
+- Custom cursor color (#007AFF - brand blue)
+- Enhanced line highlighting with focus/blur states
+- Bracket pair colorization enabled
+- Smooth cursor animations and scrolling
+
+**Animation System** (`app/globals.css`)
+
+- 5 gradient blobs with scale + rotation animations (25-40s duration)
+- Keyframes with midpoint scale transformations for breathing effect
+- Cubic-bezier easing for smooth, professional motion
+- Custom scrollbar styling matching dark theme
+- Global focus outlines and selection colors
+- Reduced motion media query for accessibility
+
+**Color System**
+
+- Protection levels: None (gray) → Low (blue) → Medium (purple) → High (orange/red)
+- Active states: Blue/purple Zap icons with pulse animation
+- Status indicators: Animated dots matching protection strength
+- Error states: Red gradients with glow effects
+- Success states: Green gradients with sparkle icons
