@@ -364,25 +364,21 @@ Then check **Admin** → **DebugView**
 ## 🎯 Key Insights You Can Track
 
 1. **User Engagement**
-
    - New vs returning users
    - Time spent on app
    - Obfuscation frequency
 
 2. **Feature Usage**
-
    - Most popular obfuscation types
    - Protection level preferences
    - Feature combinations
 
 3. **Performance**
-
    - Obfuscation speed
    - Code size changes
    - Performance impact of protection levels
 
 4. **User Journey**
-
    - First-time experience
    - Power user behavior
    - Drop-off points
@@ -409,4 +405,3 @@ Then check **Admin** → **DebugView**
 - [GA4 Measurement Protocol Documentation](https://developers.google.com/analytics/devguides/collection/protocol/ga4)
 - [GA4 Event Parameters](https://support.google.com/analytics/answer/9267735)
 - [Custom Dimensions Guide](https://support.google.com/analytics/answer/10075209)
-

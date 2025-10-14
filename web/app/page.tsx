@@ -21,7 +21,7 @@ import {
 	Sparkles,
 } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
-import { obfuscateLua } from "@/lib/obfuscator-simple";
+import { obfuscateLua, type ObfuscationResult } from "@/lib/obfuscator-simple";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
 import {
 	trackObfuscation,
@@ -37,6 +37,10 @@ import {
 	trackSettingsChange,
 } from "@/lib/analytics-client";
 import type { ParseError } from "@/lib/parser";
+import type { EncryptionAlgorithm } from "@/lib/encryption";
+import type { FormattingStyle } from "@/lib/formatter";
+import type { ObfuscationMetrics } from "@/lib/metrics";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DEFAULT_LUA_CODE = `-- Advanced Game Inventory System
 -- Showcases: Tables, Metatables, Closures, Error Handling, Complex Logic
@@ -175,12 +179,20 @@ end
 `;
 
 interface ObfuscatorSettings {
+	// Basic options (v1.0)
 	mangleNames: boolean;
 	encodeStrings: boolean;
 	encodeNumbers: boolean;
 	controlFlow: boolean;
 	minify: boolean;
 	compressionLevel: number;
+
+	// Advanced options (v1.1)
+	encryptionAlgorithm: EncryptionAlgorithm;
+	controlFlowFlattening: boolean;
+	deadCodeInjection: boolean;
+	antiDebugging: boolean;
+	formattingStyle: FormattingStyle;
 }
 
 export default function Home() {
@@ -191,14 +203,23 @@ export default function Home() {
 	const [inputError, setInputError] = useState<ParseError | undefined>(undefined);
 	const [copySuccess, setCopySuccess] = useState(false);
 	const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+	const [metrics, setMetrics] = useState<ObfuscationMetrics | null>(null);
 
 	const [settings, setSettings] = useState<ObfuscatorSettings>({
+		// Basic options (v1.0)
 		mangleNames: false,
 		encodeStrings: false,
 		encodeNumbers: false,
 		controlFlow: false,
 		minify: false,
 		compressionLevel: 0,
+
+		// Advanced options (v1.1)
+		encryptionAlgorithm: "none",
+		controlFlowFlattening: false,
+		deadCodeInjection: false,
+		antiDebugging: false,
+		formattingStyle: "minified",
 	});
 
 	const [obfuscationCount, setObfuscationCount] = useState(0);
@@ -232,28 +253,45 @@ export default function Home() {
 		}
 	};
 
-	const obfuscateCode = () => {
+	const obfuscateCode = async () => {
 		setIsProcessing(true);
 		setError(null);
 		setInputError(undefined);
 		setCopySuccess(false);
+		setMetrics(null);
 
-		setTimeout(() => {
+		try {
 			const startTime = Date.now();
-			const result = obfuscateLua(inputCode, {
+
+			// Build obfuscation options
+			const options = {
 				mangleNames: settings.mangleNames,
 				encodeStrings: settings.encodeStrings,
 				encodeNumbers: settings.encodeNumbers,
 				controlFlow: settings.controlFlow,
-				minify: settings.minify,
+				minify: !settings.formattingStyle || settings.formattingStyle === "minified",
 				protectionLevel: settings.compressionLevel,
+				encryptionAlgorithm: settings.encryptionAlgorithm,
+				controlFlowFlattening: settings.controlFlowFlattening,
+				deadCodeInjection: settings.deadCodeInjection,
+				antiDebugging: settings.antiDebugging,
+				formattingStyle: settings.formattingStyle,
+			};
+
+			// Perform client-side obfuscation (wrapped in setTimeout to prevent UI blocking)
+			const result: ObfuscationResult = await new Promise(resolve => {
+				setTimeout(() => {
+					resolve(obfuscateLua(inputCode, options));
+				}, 10);
 			});
+
 			const duration = Date.now() - startTime;
 
 			if (result.success && result.code) {
 				setOutputCode(result.code);
 				setError(null);
 				setInputError(undefined);
+				setMetrics(result.metrics || null);
 
 				// Update obfuscation count
 				const newCount = obfuscationCount + 1;
@@ -304,6 +342,7 @@ export default function Home() {
 				setError(result.error || "Failed to obfuscate code");
 				setInputError(result.errorDetails);
 				setOutputCode("");
+				setMetrics(null);
 
 				// Track error event
 				trackError({
@@ -311,9 +350,13 @@ export default function Home() {
 					errorMessage: result.error,
 				}).catch(err => console.error("Analytics tracking failed:", err));
 			}
-
+		} catch (error) {
+			setError(error instanceof Error ? error.message : "An unexpected error occurred");
+			setOutputCode("");
+			setMetrics(null);
+		} finally {
 			setIsProcessing(false);
-		}, 100);
+		}
 	};
 
 	const copyToClipboard = async () => {
@@ -512,6 +555,119 @@ export default function Home() {
 								</div>
 							</Card>
 						</section>
+
+						{/* Metrics Display */}
+						{metrics && (
+							<section aria-labelledby="metrics-heading" className="lg:col-span-2">
+								<Card className="bg-gradient-to-br from-background/60 via-background/50 to-background/40 backdrop-blur-2xl border-white/20 shadow-2xl shadow-black/30 p-6 ring-1 ring-white/10 hover:ring-white/20 transition-all duration-500">
+									<div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/20">
+										<div className="relative">
+											<div className="absolute inset-0 bg-gradient-to-br from-[#007AFF] to-[#5856D6] rounded-lg blur-md opacity-50"></div>
+											<div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center shadow-lg">
+												<Sparkles className="w-4.5 h-4.5 text-white" aria-hidden="true" />
+											</div>
+										</div>
+										<div>
+											<h2 id="metrics-heading" className="text-sm font-bold text-white tracking-wide">
+												Obfuscation Metrics
+											</h2>
+											<p className="text-xs text-gray-400 font-medium">Performance statistics</p>
+										</div>
+									</div>
+
+									<div className="space-y-4">
+										{/* Size metrics */}
+										<div className="space-y-2">
+											<div className="flex justify-between items-center">
+												<span className="text-xs text-gray-400">Input Size</span>
+												<span className="text-sm font-semibold text-white">
+													{(metrics.inputSize / 1024).toFixed(2)} KB
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-xs text-gray-400">Output Size</span>
+												<span className="text-sm font-semibold text-white">
+													{(metrics.outputSize / 1024).toFixed(2)} KB
+												</span>
+											</div>
+											<div className="flex justify-between items-center">
+												<span className="text-xs text-gray-400">Size Ratio</span>
+												<span
+													className={cn(
+														"text-sm font-bold",
+														metrics.sizeRatio > 2 ? "text-orange-400" : "text-blue-400"
+													)}
+												>
+													{metrics.sizeRatio.toFixed(2)}x
+												</span>
+											</div>
+										</div>
+
+										<div className="border-t border-white/20 pt-4">
+											<div className="flex justify-between items-center mb-3">
+												<span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+													Transformations
+												</span>
+											</div>
+											<div className="space-y-2">
+												{metrics.transformations.namesMangled > 0 && (
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-gray-400">Names Mangled</span>
+														<span className="text-sm font-semibold text-purple-400">
+															{metrics.transformations.namesMangled}
+														</span>
+													</div>
+												)}
+												{metrics.transformations.stringsEncoded > 0 && (
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-gray-400">
+															Strings Encrypted{" "}
+															{metrics.encryptionAlgorithm && metrics.encryptionAlgorithm !== "none" && (
+																<span className="text-[10px] text-blue-400">({metrics.encryptionAlgorithm})</span>
+															)}
+														</span>
+														<span className="text-sm font-semibold text-blue-400">
+															{metrics.transformations.stringsEncoded}
+														</span>
+													</div>
+												)}
+												{metrics.transformations.numbersEncoded > 0 && (
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-gray-400">Numbers Encoded</span>
+														<span className="text-sm font-semibold text-green-400">
+															{metrics.transformations.numbersEncoded}
+														</span>
+													</div>
+												)}
+												{metrics.transformations.deadCodeBlocks > 0 && (
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-gray-400">Dead Code Blocks</span>
+														<span className="text-sm font-semibold text-orange-400">
+															{metrics.transformations.deadCodeBlocks}
+														</span>
+													</div>
+												)}
+												{metrics.transformations.antiDebugChecks > 0 && (
+													<div className="flex justify-between items-center">
+														<span className="text-xs text-gray-400">Anti-Debug Checks</span>
+														<span className="text-sm font-semibold text-red-400">
+															{metrics.transformations.antiDebugChecks}
+														</span>
+													</div>
+												)}
+											</div>
+										</div>
+
+										<div className="border-t border-white/20 pt-4">
+											<div className="flex justify-between items-center">
+												<span className="text-xs text-gray-400">Processing Time</span>
+												<span className="text-sm font-semibold text-white">{metrics.duration}ms</span>
+											</div>
+										</div>
+									</div>
+								</Card>
+							</section>
+						)}
 					</div>
 
 					{/* Settings Panel */}
@@ -605,6 +761,44 @@ export default function Home() {
 									</div>
 								</div>
 
+								{/* Encryption Algorithm Selector */}
+								<div className="space-y-4 pt-6 border-t border-white/20">
+									<Label className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
+										<div className="w-1 h-5 bg-gradient-to-b from-[#007AFF] to-[#5856D6] rounded-full shadow-lg shadow-blue-500/50"></div>
+										String Encryption
+									</Label>
+
+									<div className="space-y-3">
+										<Label htmlFor="encryption-algorithm" className="text-sm font-semibold text-gray-100">
+											Encryption Algorithm
+											<p className="text-xs text-gray-400/90 mt-1 font-normal leading-relaxed">
+												Choose how strings are encrypted (requires Encode Strings)
+											</p>
+										</Label>
+										<Select
+											value={settings.encryptionAlgorithm}
+											onValueChange={(value: EncryptionAlgorithm) => {
+												setSettings({ ...settings, encryptionAlgorithm: value });
+												trackSettingsChange({ setting: "encryptionAlgorithm", value }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
+											disabled={!settings.encodeStrings}
+										>
+											<SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent className="bg-slate-900 border-white/20">
+												<SelectItem value="none">None (Basic)</SelectItem>
+												<SelectItem value="xor">XOR Cipher</SelectItem>
+												<SelectItem value="base64">Base64</SelectItem>
+												<SelectItem value="huffman">Huffman</SelectItem>
+												<SelectItem value="chunked">Chunked</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+
 								{/* Advanced Obfuscation */}
 								<div className="space-y-4 pt-6 border-t border-white/20">
 									<Label className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
@@ -658,6 +852,119 @@ export default function Home() {
 											}}
 										/>
 									</div>
+
+									<div className="flex items-center justify-between group hover:bg-white/5 p-3.5 rounded-xl -mx-3.5 transition-all duration-200 cursor-pointer">
+										<Label
+											htmlFor="control-flow-flattening"
+											className="text-sm font-semibold text-gray-100 cursor-pointer flex-1"
+										>
+											<div className="flex items-center gap-2">
+												<span>Control Flow Flattening</span>
+												{settings.controlFlowFlattening && (
+													<Zap className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+												)}
+											</div>
+											<p className="text-xs text-gray-400/90 mt-1 font-normal leading-relaxed">
+												Transform code into state machine patterns (CPU intensive)
+											</p>
+										</Label>
+										<Switch
+											id="control-flow-flattening"
+											checked={settings.controlFlowFlattening}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, controlFlowFlattening: checked });
+												trackSettingsChange({ setting: "controlFlowFlattening", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
+										/>
+									</div>
+
+									<div className="flex items-center justify-between group hover:bg-white/5 p-3.5 rounded-xl -mx-3.5 transition-all duration-200 cursor-pointer">
+										<Label
+											htmlFor="dead-code-injection"
+											className="text-sm font-semibold text-gray-100 cursor-pointer flex-1"
+										>
+											<div className="flex items-center gap-2">
+												<span>Dead Code Injection</span>
+												{settings.deadCodeInjection && <Zap className="w-3.5 h-3.5 text-orange-400 animate-pulse" />}
+											</div>
+											<p className="text-xs text-gray-400/90 mt-1 font-normal leading-relaxed">
+												Inject unreachable code blocks to confuse analysis
+											</p>
+										</Label>
+										<Switch
+											id="dead-code-injection"
+											checked={settings.deadCodeInjection}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, deadCodeInjection: checked });
+												trackSettingsChange({ setting: "deadCodeInjection", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
+										/>
+									</div>
+
+									<div className="flex items-center justify-between group hover:bg-white/5 p-3.5 rounded-xl -mx-3.5 transition-all duration-200 cursor-pointer">
+										<Label
+											htmlFor="anti-debugging"
+											className="text-sm font-semibold text-gray-100 cursor-pointer flex-1"
+										>
+											<div className="flex items-center gap-2">
+												<span>Anti-Debugging</span>
+												{settings.antiDebugging && <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />}
+											</div>
+											<p className="text-xs text-gray-400/90 mt-1 font-normal leading-relaxed">
+												Add runtime checks to detect debuggers and modified environments
+											</p>
+										</Label>
+										<Switch
+											id="anti-debugging"
+											checked={settings.antiDebugging}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, antiDebugging: checked });
+												trackSettingsChange({ setting: "antiDebugging", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
+										/>
+									</div>
+								</div>
+
+								{/* Output Formatting */}
+								<div className="space-y-4 pt-6 border-t border-white/20">
+									<Label className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
+										<div className="w-1 h-5 bg-gradient-to-b from-[#007AFF] to-[#5856D6] rounded-full shadow-lg shadow-blue-500/50"></div>
+										Output Format
+									</Label>
+
+									<div className="space-y-3">
+										<Label htmlFor="formatting-style" className="text-sm font-semibold text-gray-100">
+											Code Style
+											<p className="text-xs text-gray-400/90 mt-1 font-normal leading-relaxed">
+												Choose how the output code is formatted
+											</p>
+										</Label>
+										<Select
+											value={settings.formattingStyle}
+											onValueChange={(value: FormattingStyle) => {
+												setSettings({ ...settings, formattingStyle: value });
+												trackSettingsChange({ setting: "formattingStyle", value }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
+										>
+											<SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent className="bg-slate-900 border-white/20">
+												<SelectItem value="minified">Minified (Compact)</SelectItem>
+												<SelectItem value="pretty">Pretty (Readable)</SelectItem>
+												<SelectItem value="obfuscated">Obfuscated (Random)</SelectItem>
+												<SelectItem value="single-line">Single Line</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
 								</div>
 
 								{/* Protection Level Slider */}
@@ -696,11 +1003,18 @@ export default function Home() {
 												setSettings({
 													...settings,
 													compressionLevel: level,
+													// Basic obfuscation (v1.0)
 													minify: level >= 10,
 													mangleNames: level >= 20,
-													encodeStrings: level >= 40,
-													encodeNumbers: level >= 60,
-													controlFlow: level >= 80,
+													encodeStrings: level >= 30,
+													encodeNumbers: level >= 50,
+													controlFlow: level >= 60,
+													// Advanced obfuscation (v1.1)
+													encryptionAlgorithm: level >= 70 ? "xor" : level >= 30 ? "none" : "none",
+													deadCodeInjection: level >= 75,
+													controlFlowFlattening: level >= 85,
+													antiDebugging: level >= 90,
+													formattingStyle: level >= 10 ? "minified" : "pretty",
 												});
 
 												// Track protection level change
@@ -734,43 +1048,102 @@ export default function Home() {
 											</div>
 										)}
 										{settings.compressionLevel >= 10 && settings.compressionLevel < 20 && (
-											<div className="flex items-center gap-2">
-												<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-												<p>
-													<strong className="font-bold">Active:</strong> Minify
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Active:</strong> Minify
+													</p>
+												</div>
+											</div>
+										)}
+										{settings.compressionLevel >= 20 && settings.compressionLevel < 30 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Active:</strong> Minify, Mangle Names
+													</p>
+												</div>
+											</div>
+										)}
+										{settings.compressionLevel >= 30 && settings.compressionLevel < 50 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Active:</strong> Minify, Mangle Names, Encode Strings
+													</p>
+												</div>
+											</div>
+										)}
+										{settings.compressionLevel >= 50 && settings.compressionLevel < 60 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Active:</strong> Minify, Mangle Names, Encode Strings, Encode
+														Numbers
+													</p>
+												</div>
+											</div>
+										)}
+										{settings.compressionLevel >= 60 && settings.compressionLevel < 70 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Active:</strong> Basic + Control Flow
+													</p>
+												</div>
+												<p className="text-[10px] text-gray-400 pl-4">All basic techniques + opaque predicates</p>
+											</div>
+										)}
+										{settings.compressionLevel >= 70 && settings.compressionLevel < 75 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Advanced:</strong> Basic + XOR Encryption
+													</p>
+												</div>
+												<p className="text-[10px] text-gray-400 pl-4">All basic + XOR cipher for strings</p>
+											</div>
+										)}
+										{settings.compressionLevel >= 75 && settings.compressionLevel < 85 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Advanced:</strong> Encryption + Dead Code
+													</p>
+												</div>
+												<p className="text-[10px] text-gray-400 pl-4">XOR encryption + injected dead code blocks</p>
+											</div>
+										)}
+										{settings.compressionLevel >= 85 && settings.compressionLevel < 90 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Maximum:</strong> Control Flow Flattening
+													</p>
+												</div>
+												<p className="text-[10px] text-gray-400 pl-4">
+													All advanced + state machine transformation (CPU intensive)
 												</p>
 											</div>
 										)}
-										{settings.compressionLevel >= 20 && settings.compressionLevel < 40 && (
-											<div className="flex items-center gap-2">
-												<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-												<p>
-													<strong className="font-bold">Active:</strong> Minify, Mangle Names
-												</p>
-											</div>
-										)}
-										{settings.compressionLevel >= 40 && settings.compressionLevel < 60 && (
-											<div className="flex items-center gap-2">
-												<div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
-												<p>
-													<strong className="font-bold">Active:</strong> Minify, Mangle Names, Encode Strings
-												</p>
-											</div>
-										)}
-										{settings.compressionLevel >= 60 && settings.compressionLevel < 80 && (
-											<div className="flex items-center gap-2">
-												<div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
-												<p>
-													<strong className="font-bold">Active:</strong> Minify, Mangle Names, Encode Strings, Encode
-													Numbers
-												</p>
-											</div>
-										)}
-										{settings.compressionLevel >= 80 && (
-											<div className="flex items-center gap-2">
-												<div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
-												<p>
-													<strong className="font-bold">Maximum Protection:</strong> All techniques enabled
+										{settings.compressionLevel >= 90 && (
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+													<p>
+														<strong className="font-bold">Maximum Protection:</strong> All Techniques
+													</p>
+												</div>
+												<p className="text-[10px] text-gray-400 pl-4">
+													All features + anti-debugging measures (strongest protection)
 												</p>
 											</div>
 										)}

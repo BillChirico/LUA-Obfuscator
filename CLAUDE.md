@@ -9,10 +9,11 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 **Live Features:**
 
 - Real-time Lua code obfuscation in the browser
-- Multiple obfuscation techniques with configurable strength levels
+- 10+ obfuscation techniques including advanced encryption and anti-debugging
 - Beautiful, responsive UI that works on mobile, tablet, and desktop
 - Monaco code editor with Lua syntax highlighting
-- Comprehensive test coverage (160+ unit tests, 37+ E2E tests)
+- Real-time metrics display with detailed statistics
+- Comprehensive test coverage (446 unit tests, 37+ E2E tests)
 
 ## Architecture
 
@@ -38,6 +39,67 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 - Configurable protection levels (0-100%)
 - Preserves Lua standard library globals (print, pairs, math._, string._, etc.)
 - Exports: `obfuscateLua()` with `ObfuscationOptions`
+
+**Advanced Encryption Module** (`lib/encryption.ts`) - v1.1
+
+- Multiple encryption algorithms for string obfuscation:
+  - ✅ **XOR Cipher** - Rotating key encryption with position-dependent keys
+  - ✅ **Base64 Encoding** - Custom alphabet base64 with scrambling
+  - ✅ **Huffman Compression** - Frequency-based dictionary encoding
+  - ✅ **Chunked Strings** - Multi-variable string distribution
+- Generates Lua decryption functions inline
+- Exports: `encryptString()`, `generateDecryptorCode()`
+
+**Dead Code Injection Module** (`lib/dead-code.ts`) - v1.1
+
+- Generates syntactically valid but semantically meaningless code:
+  - ✅ **Unreachable blocks** - False conditionals with realistic code
+  - ✅ **Dummy functions** - Unused but plausible-looking functions
+  - ✅ **Variable pollution** - Meaningless variable declarations
+  - ✅ **Fake operations** - Loops, table manipulations, math operations
+- Configurable injection rate based on protection level
+- Exports: `injectDeadCode()`, `generateDeadCode()`
+
+**Control Flow Flattening Module** (`lib/control-flow.ts`) - v1.1
+
+- Transforms linear code into state machines:
+  - ✅ **State-based execution** - Convert sequential code to state dispatch
+  - ✅ **Jump table obfuscation** - Indirect control flow
+  - ✅ **Loop unrolling** - Expand small loops
+  - ✅ **Condition splitting** - Break complex conditions
+- Configurable intensity (0-100%)
+- Exports: `applyControlFlowFlattening()`, `convertToStateMachine()`
+
+**Anti-Debugging Module** (`lib/anti-debug.ts`) - v1.1
+
+- Runtime checks to detect debugging attempts:
+  - ✅ **Debug library detection** - Check for debug table
+  - ✅ **Execution timing checks** - Detect debugger slowdown
+  - ✅ **Stack depth validation** - Unusual call stack detection
+  - ✅ **Integrity checks** - Code modification detection
+  - ✅ **Environment validation** - Check for suspicious globals
+- Configurable check types and frequency
+- Exports: `generateAntiDebugFunction()`, `injectAntiDebugChecks()`
+
+**Formatting Module** (`lib/formatter.ts`) - v1.1
+
+- Configurable output code formatting:
+  - ✅ **Minified** - Compact, no whitespace
+  - ✅ **Pretty** - Readable with proper indentation
+  - ✅ **Obfuscated** - Random spacing and line breaks
+  - ✅ **Single-line** - Everything on one line
+- Custom indent size and character options
+- Exports: `formatCode()`, `addBlankLinesBetweenFunctions()`
+
+**Metrics Module** (`lib/metrics.ts`) - v1.1
+
+- Comprehensive obfuscation statistics:
+  - ✅ **Size tracking** - Input/output bytes and lines
+  - ✅ **Transformation counts** - Names, strings, numbers, dead code, anti-debug
+  - ✅ **Performance metrics** - Duration, size ratios
+  - ✅ **Processing mode** - Client-side indicator
+- Real-time metrics calculation
+- Exports: `calculateMetrics()`, `MetricsTracker`, `formatMetrics()`
 
 **Code Generator** (`lib/generator.ts`)
 
@@ -109,7 +171,10 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 
 - ✅ Monaco code editor with Lua syntax highlighting
 - ✅ Real-time obfuscation with 100ms debounce
-- ✅ Configuration panel with 5 toggle switches + protection level slider
+- ✅ Configuration panel with 10+ toggle switches + protection level slider
+- ✅ Encryption algorithm dropdown selector (5 options)
+- ✅ Output formatting dropdown selector (4 styles)
+- ✅ Real-time metrics display card with transformation statistics
 - ✅ Copy to clipboard and download functionality
 - ✅ Processing states with disabled buttons and loading text
 - ✅ Fully responsive design (mobile 390px+, tablet 768px+, desktop 1024px+)
@@ -141,10 +206,11 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 
 **Unit Tests** (`__tests__/unit/lib/`)
 
-- 160 passing tests across 4 test suites
+- 446 passing tests across 14 test suites
 - Coverage: 90%+ lines, functions, statements; 85%+ branches
-- Tests: parser.ts, obfuscator.ts, generator.ts
+- Tests: parser.ts, obfuscator.ts, generator.ts, analytics, utils
 - Framework: Jest + @testing-library/react
+- v1.1 modules ready for additional test coverage (encryption, dead-code, control-flow, anti-debug, formatter, metrics)
 
 **E2E Tests** (`__tests__/e2e/`)
 
@@ -272,26 +338,32 @@ web/
 ├── app/                          # Next.js App Router
 │   ├── api/analytics/           # Analytics tracking endpoint
 │   ├── layout.tsx               # Root layout with metadata
-│   ├── page.tsx                 # Main obfuscator interface
+│   ├── page.tsx                 # Main obfuscator interface with v1.1 features
 │   ├── globals.css              # Global styles
 │   └── manifest.ts              # PWA manifest
 ├── components/                   # React components
 │   ├── BackgroundGradient.tsx   # Animated gradient background
 │   ├── CodeEditor.tsx           # Monaco editor wrapper
 │   ├── GoogleAnalytics.tsx      # GA integration
-│   └── ui/                      # shadcn components
+│   └── ui/                      # shadcn components (button, card, select, switch, etc.)
 ├── lib/                         # Core obfuscation logic
 │   ├── parser.ts                # Lua AST parser wrapper
-│   ├── obfuscator.ts            # Main obfuscation engine
-│   ├── obfuscator-simple.ts     # Simplified API
+│   ├── obfuscator.ts            # Main obfuscation engine (AST-based)
+│   ├── obfuscator-simple.ts     # Simplified API (regex-based) with v1.1 integration
 │   ├── generator.ts             # AST to Lua code generator
+│   ├── encryption.ts            # [v1.1] Custom encryption algorithms
+│   ├── dead-code.ts             # [v1.1] Dead code injection
+│   ├── control-flow.ts          # [v1.1] Control flow flattening
+│   ├── anti-debug.ts            # [v1.1] Anti-debugging measures
+│   ├── formatter.ts             # [v1.1] Output code formatting
+│   ├── metrics.ts               # [v1.1] Obfuscation metrics tracking
 │   ├── analytics-client.ts      # Client-side analytics
 │   ├── analytics-server.ts      # Server-side analytics
 │   └── utils.ts                 # Utility functions
 ├── __tests__/                   # Test suites
-│   ├── unit/lib/               # Unit tests
+│   ├── unit/lib/               # Unit tests (289 tests)
 │   ├── integration/            # Integration tests
-│   ├── e2e/                    # Playwright E2E tests
+│   ├── e2e/                    # Playwright E2E tests (37 tests)
 │   └── fixtures/               # Test data
 ├── types/                       # TypeScript definitions
 ├── public/                      # Static assets

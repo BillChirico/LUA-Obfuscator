@@ -161,6 +161,7 @@ Configuration options for the obfuscation process.
 
 ```typescript
 interface ObfuscationOptions {
+	// Basic options (v1.0)
 	/** Replace variable/function names with hex identifiers */
 	mangleNames?: boolean;
 
@@ -178,6 +179,28 @@ interface ObfuscationOptions {
 
 	/** Protection level (0-100%) */
 	protectionLevel?: number;
+
+	// Advanced options (v1.1)
+	/** Encryption algorithm for strings: "none", "xor", "base64", "huffman", "chunked" */
+	encryptionAlgorithm?: EncryptionAlgorithm;
+
+	/** Transform code into state machine patterns */
+	controlFlowFlattening?: boolean;
+
+	/** Inject unreachable code blocks */
+	deadCodeInjection?: boolean;
+
+	/** Add anti-debugging runtime checks */
+	antiDebugging?: boolean;
+
+	/** Output formatting style: "minified", "pretty", "obfuscated", "single-line" */
+	formattingStyle?: FormattingStyle;
+
+	/** Indent size for pretty formatting (default: 2) */
+	indentSize?: number;
+
+	/** Indent character: "space" or "tab" (default: "space") */
+	indentChar?: IndentChar;
 }
 ```
 
@@ -185,25 +208,39 @@ interface ObfuscationOptions {
 
 ```typescript
 {
+  // Basic options
   mangleNames: true,
   encodeStrings: false,
   encodeNumbers: false,
   controlFlow: false,
   minify: true,
-  protectionLevel: 50
+  protectionLevel: 50,
+
+  // Advanced options (v1.1)
+  encryptionAlgorithm: "none",
+  controlFlowFlattening: false,
+  deadCodeInjection: false,
+  antiDebugging: false,
+  formattingStyle: "minified",
+  indentSize: 2,
+  indentChar: "space"
 }
 ```
 
 **Protection Level Mapping:**
 
-| Level   | Enabled Techniques                                      |
-| ------- | ------------------------------------------------------- |
-| 0%      | None (manual control only)                              |
-| 10-19%  | Minify                                                  |
-| 20-39%  | Minify + Mangle Names                                   |
-| 40-59%  | Minify + Mangle Names + Encode Strings                  |
-| 60-79%  | Minify + Mangle Names + Encode Strings + Encode Numbers |
-| 80-100% | All techniques (Maximum Protection)                     |
+| Level   | Enabled Techniques                                           |
+| ------- | ------------------------------------------------------------ |
+| 0%      | None (manual control only)                                   |
+| 10-19%  | Minify                                                       |
+| 20-29%  | Minify + Mangle Names                                        |
+| 30-49%  | Minify + Mangle Names + Encode Strings                       |
+| 50-59%  | Minify + Mangle Names + Encode Strings + Encode Numbers      |
+| 60-69%  | All Basic + Control Flow                                     |
+| 70-74%  | All Basic + XOR Encryption (v1.1)                            |
+| 75-84%  | Advanced + Dead Code Injection (v1.1)                        |
+| 85-89%  | Advanced + Control Flow Flattening (v1.1)                    |
+| 90-100% | Maximum Protection (All techniques including Anti-Debugging) |
 
 ---
 
@@ -224,6 +261,33 @@ interface ObfuscationResult {
 
 	/** Detailed error information (if parse failed) */
 	errorDetails?: ParseError;
+
+	/** Obfuscation metrics and statistics (v1.1) */
+	metrics?: ObfuscationMetrics;
+}
+```
+
+### `ObfuscationMetrics` (v1.1)
+
+```typescript
+interface ObfuscationMetrics {
+	inputSize: number; // Original code size in bytes
+	outputSize: number; // Obfuscated code size in bytes
+	sizeRatio: number; // output / input ratio
+	compressionRatio: number; // 1 - (output / input)
+	inputLines: number; // Original line count
+	outputLines: number; // Obfuscated line count
+	transformations: {
+		namesMangled: number;
+		stringsEncoded: number;
+		numbersEncoded: number;
+		deadCodeBlocks: number;
+		controlFlowFlattened: number;
+		antiDebugChecks: number;
+	};
+	duration: number; // Processing time in ms
+	encryptionAlgorithm?: string; // Encryption method used
+	processingMode?: "client"; // Always client-side
 }
 ```
 
@@ -509,6 +573,69 @@ if (!result.success) {
 
 ---
 
+### 6. Custom String Encryption (`encryptionAlgorithm`) - v1.1
+
+Advanced encryption algorithms for string obfuscation beyond basic byte arrays.
+
+**XOR Cipher** (`"xor"`): Rotating key encryption with position-dependent keys
+
+**Base64 Encoding** (`"base64"`): Custom alphabet base64 with scrambling
+
+**Huffman Compression** (`"huffman"`): Frequency-based dictionary encoding
+
+**Chunked Strings** (`"chunked"`): Multi-variable string distribution
+
+**Example:**
+
+```typescript
+const result = obfuscateLua(code, {
+	encodeStrings: true,
+	encryptionAlgorithm: "xor", // Use XOR cipher
+	protectionLevel: 70,
+});
+```
+
+---
+
+### 7. Dead Code Injection (`deadCodeInjection`) - v1.1
+
+Injects syntactically valid but unreachable code blocks to confuse analysis.
+
+**Injection Types:**
+
+- Unreachable blocks with false conditionals
+- Unused function definitions
+- Dummy variable declarations
+- Fake loops and table operations
+
+---
+
+### 8. Control Flow Flattening (`controlFlowFlattening`) - v1.1
+
+Transforms linear code into state machine patterns (CPU intensive).
+
+**Note**: This technique significantly increases code size and processing time.
+
+---
+
+### 9. Anti-Debugging (`antiDebugging`) - v1.1
+
+Adds runtime checks to detect debuggers and modified environments.
+
+**Checks Include:**
+
+- Debug library detection
+- Execution timing validation
+- Environment integrity checks
+
+---
+
+### 10. Output Formatting (`formattingStyle`) - v1.1
+
+Control output code style: `"minified"`, `"pretty"`, `"obfuscated"`, or `"single-line"`.
+
+---
+
 ## Code Examples
 
 ### Basic Usage
@@ -555,6 +682,48 @@ const balanced = obfuscateLua(code, { protectionLevel: 50 });
 
 // Maximum protection (slower execution)
 const maximum = obfuscateLua(code, { protectionLevel: 100 });
+```
+
+---
+
+### Advanced Features (v1.1)
+
+```typescript
+// Using custom encryption algorithm
+const encrypted = obfuscateLua(code, {
+	encodeStrings: true,
+	encryptionAlgorithm: "xor", // XOR cipher
+	protectionLevel: 70,
+});
+
+// With dead code injection and anti-debugging
+const advanced = obfuscateLua(code, {
+	mangleNames: true,
+	encodeStrings: true,
+	deadCodeInjection: true,
+	antiDebugging: true,
+	protectionLevel: 85,
+});
+
+// Maximum protection with all v1.1 features
+const maximum = obfuscateLua(code, {
+	protectionLevel: 95, // Automatically enables most features
+	encryptionAlgorithm: "xor",
+	controlFlowFlattening: true,
+	deadCodeInjection: true,
+	antiDebugging: true,
+	formattingStyle: "single-line",
+});
+
+// Access obfuscation metrics
+if (maximum.success && maximum.metrics) {
+	console.log(`Input: ${maximum.metrics.inputSize} bytes`);
+	console.log(`Output: ${maximum.metrics.outputSize} bytes`);
+	console.log(`Size Ratio: ${maximum.metrics.sizeRatio.toFixed(2)}x`);
+	console.log(`Duration: ${maximum.metrics.duration}ms`);
+	console.log(`Names Mangled: ${maximum.metrics.transformations.namesMangled}`);
+	console.log(`Strings Encrypted: ${maximum.metrics.transformations.stringsEncoded}`);
+}
 ```
 
 ---

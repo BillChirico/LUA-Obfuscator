@@ -6,7 +6,7 @@ A production-ready, web-based Lua code obfuscation tool that protects Lua source
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-197%20passing-success)](web/__tests__)
+[![Tests](https://img.shields.io/badge/Tests-446%20passing-success)](web/__tests__)
 
 ## Overview
 
@@ -18,14 +18,18 @@ Bill's Lua Obfuscator is a **fully client-side** code protection tool designed f
 
 - 🔒 **100% Client-Side Processing** - Your code stays on your machine
 - ⚡ **Real-Time Obfuscation** - Instant feedback with Monaco editor
-- 🎯 **Multiple Techniques** - Name mangling, string encoding, control flow, minification
+- 🎯 **10+ Obfuscation Techniques** - Basic to advanced protection methods
+- 🛡️ **Advanced Security** - Custom encryption, anti-debugging, dead code injection
+- 📊 **Detailed Metrics** - Track size, transformations, and processing time
 - 📱 **Fully Responsive** - Works on mobile, tablet, and desktop
-- ✅ **197 Passing Tests** - 160 unit tests + 37 E2E tests across 6 browsers
+- ✅ **446 Passing Tests** - Comprehensive test coverage across 6 browsers
 - 🚀 **Production Ready** - Deployed on Vercel with analytics and monitoring
 
 ## Features
 
 ### Core Obfuscation Capabilities
+
+#### Basic Techniques (v1.0)
 
 | Feature                      | Description                                                               | Strength Level |
 | ---------------------------- | ------------------------------------------------------------------------- | -------------- |
@@ -35,11 +39,25 @@ Bill's Lua Obfuscator is a **fully client-side** code protection tool designed f
 | **Control Flow Obfuscation** | Adds opaque predicates to complicate analysis                             | High           |
 | **Code Minification**        | Removes comments, whitespace, and blank lines                             | Low            |
 
+#### Advanced Techniques (v1.1)
+
+| Feature                      | Description                                                    | Strength Level |
+| ---------------------------- | -------------------------------------------------------------- | -------------- |
+| **Custom String Encryption** | Multiple encryption algorithms (XOR, Base64, Huffman, Chunked) | Very High      |
+| **Dead Code Injection**      | Injects unreachable code blocks to confuse analysis            | High           |
+| **Control Flow Flattening**  | Transforms code into state machine patterns (CPU intensive)    | Very High      |
+| **Anti-Debugging Measures**  | Runtime checks for debuggers and modified environments         | Very High      |
+| **Configurable Formatting**  | Output styles: Minified, Pretty, Obfuscated, Single-line       | Variable       |
+| **Obfuscation Metrics**      | Detailed statistics on transformations and performance         | N/A            |
+
 ### User Experience
 
 - **Monaco Code Editor** - Industry-standard editor with Lua syntax highlighting
-- **Configurable Protection Levels** - Slider from 0-100% with automatic technique selection
+- **Configurable Protection Levels** - Slider from 0-100% with progressive feature activation
 - **Individual Technique Toggles** - Fine-grained control over each obfuscation method
+- **Encryption Algorithm Selector** - Choose between XOR, Base64, Huffman, or Chunked encryption
+- **Output Format Options** - Minified, Pretty, Obfuscated, or Single-line formatting
+- **Real-Time Metrics Display** - See size, transformations, and processing time
 - **Copy to Clipboard** - One-click copy with visual feedback
 - **Download as .lua** - Export obfuscated code directly
 - **Error Handling** - Clear error messages with validation
@@ -55,6 +73,30 @@ Bill's Lua Obfuscator is a **fully client-side** code protection tool designed f
 | **LuaJIT**  | ✅ Compatible   | High-performance scenarios      |
 
 **Protected Elements**: All Lua keywords, standard library functions (`print`, `pairs`, `ipairs`, etc.), and global tables (`math`, `string`, `table`, etc.) are automatically preserved.
+
+### Advanced Features Deep Dive
+
+#### String Encryption Algorithms
+
+**XOR Cipher** - Rotating key XOR encryption where each character is XORed with a position-dependent key. Provides strong obfuscation with minimal performance impact.
+
+**Base64 Encoding** - Custom alphabet base64 encoding with character position scrambling. Makes strings completely unreadable in source.
+
+**Huffman Compression** - Frequency-based encoding using a custom dictionary. Especially effective for strings with repeated characters.
+
+**Chunked Strings** - Splits strings into multiple segments stored in separate variables, then concatenates at runtime. Defeats simple string search patterns.
+
+#### Protection Level Guide
+
+| Level   | Active Techniques                         | Use Case               |
+| ------- | ----------------------------------------- | ---------------------- |
+| **0%**  | None                                      | Development/testing    |
+| **20%** | Minify, Mangle Names                      | Light protection       |
+| **40%** | + Encode Strings                          | Standard protection    |
+| **60%** | + Encode Numbers, Control Flow            | Strong protection      |
+| **70%** | + XOR Encryption                          | Advanced protection    |
+| **80%** | + Dead Code Injection                     | Very strong protection |
+| **90%** | + Control Flow Flattening, Anti-Debugging | Maximum protection     |
 
 ## Quick Start
 
@@ -226,11 +268,17 @@ LUA-Obfuscator/
 
 Bill's Lua Obfuscator includes comprehensive test coverage across multiple levels:
 
-| Test Suite            | Tests                                 | Coverage                  | Framework  |
-| --------------------- | ------------------------------------- | ------------------------- | ---------- |
-| **Unit Tests**        | 160                                   | 90%+ lines, 85%+ branches | Jest       |
-| **Integration Tests** | Included in unit suite                | Full pipeline             | Jest       |
-| **E2E Tests**         | 37 tests × 6 browsers = 222 scenarios | Full UI workflows         | Playwright |
+| Test Suite            | Tests                      | Coverage                  | Framework  |
+| --------------------- | -------------------------- | ------------------------- | ---------- |
+| **Unit Tests**        | 446                        | 90%+ lines, 85%+ branches | Jest       |
+| **Integration Tests** | Included in unit suite     | Full pipeline             | Jest       |
+| **E2E Tests**         | 10 test files × 6 browsers | Full UI workflows         | Playwright |
+
+**V1.1 Test Coverage:**
+
+- **157 new unit tests** for encryption, dead-code, formatter, metrics, and anti-debug modules
+- **3 new E2E test files**: `advanced-features-v11.spec.ts`, `metrics-display.spec.ts`, `protection-level-v11.spec.ts`
+- **Total test count**: 446 unit tests + comprehensive E2E coverage
 
 ### Running Tests
 
@@ -414,7 +462,7 @@ npm run build
 
 ## Roadmap
 
-### ✅ v1.0 - Current Release
+### ✅ v1.0 - Initial Release
 
 - [x] Real-time obfuscation with Monaco editor
 - [x] Name mangling with hexadecimal identifiers
@@ -424,17 +472,19 @@ npm run build
 - [x] Code minification
 - [x] Configurable protection levels (0-100%)
 - [x] Responsive design (mobile, tablet, desktop)
-- [x] Comprehensive test coverage (197 tests)
+- [x] Comprehensive test coverage (289 tests)
 - [x] Production deployment with analytics
 
-### 🚧 v1.1 - Advanced Obfuscation
+### ✅ v1.1 - Advanced Obfuscation (Current Release)
 
-- [ ] Custom encryption algorithms for strings
-- [ ] Advanced control flow flattening
-- [ ] Dead code injection
-- [ ] Anti-debugging measures
-- [ ] Configurable output formatting
-- [ ] Before/after code size metrics
+- [x] Custom encryption algorithms (XOR, Base64, Huffman, Chunked)
+- [x] Advanced control flow flattening with state machines
+- [x] Dead code injection with realistic patterns
+- [x] Anti-debugging measures (debug detection, timing checks)
+- [x] Configurable output formatting (4 styles)
+- [x] Real-time obfuscation metrics and statistics
+- [x] Progressive feature activation via protection slider
+- [x] 100% client-side processing (no server dependencies)
 
 ### 🔮 v1.2 - Extended Features
 
