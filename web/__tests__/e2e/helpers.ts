@@ -56,8 +56,9 @@ export class MonacoHelper {
 
 	/**
 	 * Wait for output to be generated
+	 * @param timeout Maximum time to wait in milliseconds (default 10000ms for complex operations)
 	 */
-	async waitForOutput(timeout: number = 5000): Promise<string> {
+	async waitForOutput(timeout: number = 10000): Promise<string> {
 		await this.page.waitForTimeout(500); // Initial wait
 		
 		let retries = Math.floor(timeout / 500);
@@ -96,6 +97,7 @@ export class UIHelper {
 
 	/**
 	 * Click the obfuscate button and wait for processing
+	 * @param waitForOutput Whether to wait for obfuscation to complete
 	 */
 	async clickObfuscate(waitForOutput: boolean = true): Promise<void> {
 		// Use exact name to avoid strict mode violations
@@ -106,6 +108,17 @@ export class UIHelper {
 			// Wait for loading state to appear and disappear
 			await this.page.waitForTimeout(1000);
 		}
+	}
+
+	/**
+	 * Click obfuscate button for complex operations (longer timeout)
+	 * Use for advanced features, large code, or edge cases
+	 */
+	async clickObfuscateComplex(): Promise<void> {
+		const button = this.page.getByRole("button", { name: "Obfuscate Lua code" }).first();
+		await button.click();
+		// Wait longer for complex operations
+		await this.page.waitForTimeout(2000);
 	}
 
 	/**

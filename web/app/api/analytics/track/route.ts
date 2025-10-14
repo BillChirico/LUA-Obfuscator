@@ -43,8 +43,23 @@ interface TrackEventRequest {
  */
 export async function POST(request: NextRequest) {
 	try {
-		// Parse request body
-		const body: TrackEventRequest = await request.json();
+		// Get content type
+		const contentType = request.headers.get("content-type");
+		if (!contentType?.includes("application/json")) {
+			return NextResponse.json({ error: "Content-Type must be application/json" }, { status: 400 });
+		}
+
+		// Clone request to safely handle body parsing
+		const clonedRequest = request.clone();
+		let body: TrackEventRequest;
+
+		try {
+			// Parse request body
+			body = await clonedRequest.json();
+		} catch (parseError) {
+			// Handle empty or malformed JSON gracefully
+			return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+		}
 
 		// Validate required fields
 		if (!body.clientId) {

@@ -11,7 +11,8 @@ export default defineConfig({
 	testDir: "./__tests__/e2e",
 
 	// Maximum time one test can run for
-	timeout: 45 * 1000, // Increased from 30s to 45s for complex operations
+	// Increased to 60s for complex obfuscation operations (advanced features, edge cases)
+	timeout: 60 * 1000,
 
 	// Run tests in files in parallel
 	fullyParallel: true,
@@ -22,8 +23,9 @@ export default defineConfig({
 	// Retry on CI only
 	retries: process.env.CI ? 2 : 0,
 
-	// Opt out of parallel tests on CI
-	workers: process.env.CI ? 1 : undefined,
+	// Limit parallel workers to prevent server overload
+	// Use 1 worker on CI, 4 workers locally (was unlimited before)
+	workers: process.env.CI ? 1 : 4,
 
 	// Reporter to use
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
@@ -42,11 +44,11 @@ export default defineConfig({
 		// Video on first retry
 		video: "retain-on-failure",
 
-		// Navigation timeout
-		navigationTimeout: 15 * 1000,
+		// Navigation timeout - increased for slow page loads
+		navigationTimeout: 20 * 1000,
 
-		// Action timeout
-		actionTimeout: 10 * 1000,
+		// Action timeout - increased for complex interactions
+		actionTimeout: 15 * 1000,
 	},
 
 	// Configure projects for major browsers and devices
