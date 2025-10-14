@@ -301,3 +301,80 @@ describe("validateLua", () => {
 		});
 	});
 });
+
+describe("Input Validation - Security Limits", () => {
+	describe("Size Limits", () => {
+		test("should reject code exceeding 5MB", () => {
+			// Create a string slightly over 5MB
+			const largCode = "x".repeat(5 * 1024 * 1024 + 1000);
+			const result = parseLua(largCode);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("too large");
+			expect(result.error).toContain("5MB");
+		});
+
+		test("should accept code well under 5MB", () => {
+			// Create valid Lua code under both size and line limits
+			// 10,000 lines with ~100 chars each = ~1MB
+			const line = "local var_with_long_name_to_increase_bytes = 1234567890\n";
+			const iterations = 10000;
+			const code = line.repeat(iterations);
+			const result = parseLua(code);
+
+			expect(result.success).toBe(true);
+			expect(code.length).toBeLessThan(5 * 1024 * 1024);
+		});
+	});
+
+	describe("Line Count Limits", () => {
+		test("should reject code exceeding 50,000 lines", () => {
+			// Create code with > 50,000 lines
+			const manyLines = "x=1\n".repeat(50001);
+			const result = parseLua(manyLines);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("too complex");
+			expect(result.error).toContain("50,000");
+		});
+
+		test("should accept code at 50,000 lines", () => {
+			// Create code with exactly 50,000 lines (but split() counts as 50,000)
+			// A string with 49,999 newlines has 50,000 lines when split
+			const code = "x=1\n".repeat(49999) + "x=1";
+			const result = parseLua(code);
+
+			expect(result.success).toBe(true);
+		});
+
+		test("should accept code just under 50,000 lines", () => {
+			// Create code with well under 50,000 lines
+			const code = "x=1\n".repeat(40000);
+			const result = parseLua(code);
+
+			expect(result.success).toBe(true);
+		});
+	});
+
+	describe("Error Messages", () => {
+		test("should provide helpful size error messages", () => {
+			const hugeCode = "x".repeat(10 * 1024 * 1024); // 10MB
+			const result = parseLua(hugeCode);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toBeDefined();
+			expect(result.error).toMatch(/\d+\.?\d*MB/); // Should include size in MB
+			expect(result.errorDetails).toBeDefined();
+		});
+
+		test("should provide helpful line count error messages", () => {
+			const manyLines = "x\n".repeat(100000);
+			const result = parseLua(manyLines);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toBeDefined();
+			expect(result.error).toMatch(/\d{1,3}(,\d{3})* lines/); // Should include formatted line count
+			expect(result.errorDetails).toBeDefined();
+		});
+	});
+});

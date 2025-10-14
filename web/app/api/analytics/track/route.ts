@@ -66,14 +66,41 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "clientId is required" }, { status: 400 });
 		}
 
+		// Validate clientId format (prevent injection attacks)
+		if (typeof body.clientId !== "string" || !/^[\w.-]+$/.test(body.clientId) || body.clientId.length > 100) {
+			return NextResponse.json({ error: "Invalid clientId format (max 100 alphanumeric characters)" }, { status: 400 });
+		}
+
 		if (!body.events || !Array.isArray(body.events) || body.events.length === 0) {
 			return NextResponse.json({ error: "events array is required and must not be empty" }, { status: 400 });
 		}
 
-		// Validate event names
+		// Validate events array size (prevent DoS)
+		if (body.events.length > 20) {
+			return NextResponse.json({ error: "Too many events (max 20 per request)" }, { status: 400 });
+		}
+
+		// Validate event structure
 		for (const event of body.events) {
-			if (!event.name) {
-				return NextResponse.json({ error: "All events must have a name" }, { status: 400 });
+			if (!event.name || typeof event.name !== "string") {
+				return NextResponse.json({ error: "All events must have a valid name" }, { status: 400 });
+			}
+
+			// Validate event name length
+			if (event.name.length > 40) {
+				return NextResponse.json({ error: "Event name too long (max 40 characters)" }, { status: 400 });
+			}
+
+			// Validate params if present
+			if (event.params) {
+				if (typeof event.params !== "object" || Array.isArray(event.params)) {
+					return NextResponse.json({ error: "Event params must be an object" }, { status: 400 });
+				}
+
+				// Limit number of params (GA4 limit is 25)
+				if (Object.keys(event.params).length > 25) {
+					return NextResponse.json({ error: "Too many event parameters (max 25)" }, { status: 400 });
+				}
 			}
 		}
 
