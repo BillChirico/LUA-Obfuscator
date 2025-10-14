@@ -21,11 +21,13 @@ Comprehensive guide for developers contributing to or extending the Lua Obfuscat
 ### Prerequisites
 
 **Required:**
+
 - Node.js 20.x or later
 - npm 10.x or later
 - Git
 
 **Recommended:**
+
 - VS Code with extensions:
   - ESLint
   - Prettier
@@ -46,6 +48,7 @@ npm install
 ```
 
 This installs:
+
 - Next.js 15.5.4
 - React 19.2.0
 - TypeScript 5.9.3
@@ -79,19 +82,19 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format code with Prettier |
-| `npm run format:check` | Check code formatting |
-| `npm test` | Run Jest unit tests |
-| `npm run test:coverage` | Run tests with coverage |
-| `npm run test:e2e` | Run Playwright E2E tests |
-| `npm run test:e2e:ui` | Run E2E tests with UI |
-| `npm run test:all` | Run all tests |
+| Command                 | Description               |
+| ----------------------- | ------------------------- |
+| `npm run dev`           | Start development server  |
+| `npm run build`         | Build for production      |
+| `npm start`             | Start production server   |
+| `npm run lint`          | Run ESLint                |
+| `npm run format`        | Format code with Prettier |
+| `npm run format:check`  | Check code formatting     |
+| `npm test`              | Run Jest unit tests       |
+| `npm run test:coverage` | Run tests with coverage   |
+| `npm run test:e2e`      | Run Playwright E2E tests  |
+| `npm run test:e2e:ui`   | Run E2E tests with UI     |
+| `npm run test:all`      | Run all tests             |
 
 ---
 
@@ -196,12 +199,14 @@ Output Obfuscated Code
 ### Two Obfuscation Implementations
 
 **1. AST-Based (`obfuscator.ts`)** - Complex but powerful
+
 - Parses code to AST
 - Transforms AST nodes
 - Generates code from modified AST
 - More robust but harder to maintain
 
 **2. Regex-Based (`obfuscator-simple.ts`)** - **Production version**
+
 - Uses pattern matching on source text
 - Simpler logic, easier to debug
 - Validates with AST but transforms with regex
@@ -210,6 +215,7 @@ Output Obfuscated Code
 ### Key Design Decisions
 
 **Why regex-based over AST-based?**
+
 1. Simpler to implement and maintain
 2. Easier to debug transformation issues
 3. Better error messages
@@ -217,11 +223,13 @@ Output Obfuscated Code
 5. Performance is adequate for browser use
 
 **Transformation Order:**
+
 ```
 Numbers → Control Flow → Strings → Names → Minify
 ```
 
 **Why this order?**
+
 - Numbers first: Avoid encoding mangled variable names
 - Strings before names: Prevent encoding `_0x0000` identifiers
 - Minification last: Clean up after all transformations
@@ -237,50 +245,53 @@ Let's add "Dead Code Injection" as an example.
 #### Step 1: Update Types
 
 `lib/obfuscator-simple.ts`:
+
 ```typescript
 export interface ObfuscationOptions {
-  mangleNames?: boolean;
-  encodeStrings?: boolean;
-  encodeNumbers?: boolean;
-  controlFlow?: boolean;
-  minify?: boolean;
-  deadCodeInjection?: boolean;  // NEW
-  protectionLevel?: number;
+	mangleNames?: boolean;
+	encodeStrings?: boolean;
+	encodeNumbers?: boolean;
+	controlFlow?: boolean;
+	minify?: boolean;
+	deadCodeInjection?: boolean; // NEW
+	protectionLevel?: number;
 }
 ```
 
 #### Step 2: Implement Transformation
 
 `lib/obfuscator-simple.ts`:
+
 ```typescript
 class LuaObfuscator {
-  // ... existing methods ...
+	// ... existing methods ...
 
-  private injectDeadCode(code: string, protectionLevel: number): string {
-    const shouldInject = Math.random() * 100 < protectionLevel;
-    if (!shouldInject) return code;
+	private injectDeadCode(code: string, protectionLevel: number): string {
+		const shouldInject = Math.random() * 100 < protectionLevel;
+		if (!shouldInject) return code;
 
-    // Generate dead code snippets
-    const deadCodeSnippets = [
-      'if false then print("unreachable") end',
-      'local _unused = 1 + 1',
-      'do local _ = nil end'
-    ];
+		// Generate dead code snippets
+		const deadCodeSnippets = [
+			'if false then print("unreachable") end',
+			"local _unused = 1 + 1",
+			"do local _ = nil end",
+		];
 
-    // Insert dead code at random positions
-    const lines = code.split('\n');
-    const randomIndex = Math.floor(Math.random() * lines.length);
-    const deadCode = deadCodeSnippets[Math.floor(Math.random() * deadCodeSnippets.length)];
+		// Insert dead code at random positions
+		const lines = code.split("\n");
+		const randomIndex = Math.floor(Math.random() * lines.length);
+		const deadCode = deadCodeSnippets[Math.floor(Math.random() * deadCodeSnippets.length)];
 
-    lines.splice(randomIndex, 0, deadCode);
-    return lines.join('\n');
-  }
+		lines.splice(randomIndex, 0, deadCode);
+		return lines.join("\n");
+	}
 }
 ```
 
 #### Step 3: Add to Pipeline
 
 `lib/obfuscator-simple.ts`:
+
 ```typescript
 obfuscate(code: string, options: ObfuscationOptions): ObfuscationResult {
   // ... existing code ...
@@ -297,24 +308,26 @@ obfuscate(code: string, options: ObfuscationOptions): ObfuscationResult {
 #### Step 4: Update Protection Level Mapping
 
 `lib/obfuscator-simple.ts`:
+
 ```typescript
 export function obfuscateLua(code: string, options?: ObfuscationOptions): ObfuscationResult {
-  const defaultOptions: ObfuscationOptions = {
-    mangleNames: protectionLevel >= 20,
-    encodeStrings: protectionLevel >= 40,
-    encodeNumbers: protectionLevel >= 60,
-    controlFlow: protectionLevel >= 80,
-    deadCodeInjection: protectionLevel >= 90,  // NEW
-    minify: protectionLevel >= 10,
-    protectionLevel: protectionLevel,
-  };
-  // ...
+	const defaultOptions: ObfuscationOptions = {
+		mangleNames: protectionLevel >= 20,
+		encodeStrings: protectionLevel >= 40,
+		encodeNumbers: protectionLevel >= 60,
+		controlFlow: protectionLevel >= 80,
+		deadCodeInjection: protectionLevel >= 90, // NEW
+		minify: protectionLevel >= 10,
+		protectionLevel: protectionLevel,
+	};
+	// ...
 }
 ```
 
 #### Step 5: Add UI Toggle
 
 `app/page.tsx`:
+
 ```typescript
 interface ObfuscatorSettings {
   // ... existing settings ...
@@ -343,29 +356,30 @@ interface ObfuscatorSettings {
 #### Step 6: Write Tests
 
 `__tests__/unit/lib/obfuscator-simple.test.ts`:
+
 ```typescript
-describe('Dead Code Injection', () => {
-  it('should inject dead code when enabled', () => {
-    const code = 'local x = 5\nprint(x)';
-    const result = obfuscateLua(code, {
-      deadCodeInjection: true,
-      protectionLevel: 100
-    });
+describe("Dead Code Injection", () => {
+	it("should inject dead code when enabled", () => {
+		const code = "local x = 5\nprint(x)";
+		const result = obfuscateLua(code, {
+			deadCodeInjection: true,
+			protectionLevel: 100,
+		});
 
-    expect(result.success).toBe(true);
-    expect(result.code).toContain('if false then');
-  });
+		expect(result.success).toBe(true);
+		expect(result.code).toContain("if false then");
+	});
 
-  it('should not inject when disabled', () => {
-    const code = 'local x = 5\nprint(x)';
-    const result = obfuscateLua(code, {
-      deadCodeInjection: false,
-      protectionLevel: 0
-    });
+	it("should not inject when disabled", () => {
+		const code = "local x = 5\nprint(x)";
+		const result = obfuscateLua(code, {
+			deadCodeInjection: false,
+			protectionLevel: 0,
+		});
 
-    expect(result.success).toBe(true);
-    expect(result.code).not.toContain('if false then');
-  });
+		expect(result.success).toBe(true);
+		expect(result.code).not.toContain("if false then");
+	});
 });
 ```
 
@@ -382,6 +396,7 @@ Example: Add a "History" feature that tracks previous obfuscations.
 #### Step 1: Create Component
 
 `components/ObfuscationHistory.tsx`:
+
 ```typescript
 'use client';
 
@@ -439,6 +454,7 @@ export function ObfuscationHistory() {
 #### Step 2: Integrate into Main Page
 
 `app/page.tsx`:
+
 ```typescript
 import { ObfuscationHistory } from '@/components/ObfuscationHistory';
 
@@ -461,6 +477,7 @@ export default function Home() {
 ### Unit Testing Strategy
 
 **Test File Organization:**
+
 ```
 __tests__/unit/lib/
   ├── parser.test.ts           # Parser tests
@@ -469,27 +486,28 @@ __tests__/unit/lib/
 ```
 
 **Example Test Structure:**
+
 ```typescript
-import { obfuscateLua } from '@/lib/obfuscator-simple';
+import { obfuscateLua } from "@/lib/obfuscator-simple";
 
-describe('Name Mangling', () => {
-  it('should mangle variable names', () => {
-    const code = 'local playerName = "Hero"';
-    const result = obfuscateLua(code, { mangleNames: true });
+describe("Name Mangling", () => {
+	it("should mangle variable names", () => {
+		const code = 'local playerName = "Hero"';
+		const result = obfuscateLua(code, { mangleNames: true });
 
-    expect(result.success).toBe(true);
-    expect(result.code).toContain('_0x');
-    expect(result.code).not.toContain('playerName');
-  });
+		expect(result.success).toBe(true);
+		expect(result.code).toContain("_0x");
+		expect(result.code).not.toContain("playerName");
+	});
 
-  it('should preserve Lua keywords', () => {
-    const code = 'if true then print("test") end';
-    const result = obfuscateLua(code, { mangleNames: true });
+	it("should preserve Lua keywords", () => {
+		const code = 'if true then print("test") end';
+		const result = obfuscateLua(code, { mangleNames: true });
 
-    expect(result.code).toContain('if');
-    expect(result.code).toContain('then');
-    expect(result.code).toContain('end');
-  });
+		expect(result.code).toContain("if");
+		expect(result.code).toContain("then");
+		expect(result.code).toContain("end");
+	});
 });
 ```
 
@@ -498,9 +516,9 @@ describe('Name Mangling', () => {
 Test complete workflows:
 
 ```typescript
-describe('Full Obfuscation Workflow', () => {
-  it('should obfuscate and validate round-trip', () => {
-    const originalCode = `
+describe("Full Obfuscation Workflow", () => {
+	it("should obfuscate and validate round-trip", () => {
+		const originalCode = `
       local function fibonacci(n)
         if n <= 1 then return n end
         return fibonacci(n - 1) + fibonacci(n - 2)
@@ -508,42 +526,43 @@ describe('Full Obfuscation Workflow', () => {
       print(fibonacci(10))
     `;
 
-    const result = obfuscateLua(originalCode, {
-      mangleNames: true,
-      encodeStrings: true,
-      minify: true,
-      protectionLevel: 50
-    });
+		const result = obfuscateLua(originalCode, {
+			mangleNames: true,
+			encodeStrings: true,
+			minify: true,
+			protectionLevel: 50,
+		});
 
-    expect(result.success).toBe(true);
+		expect(result.success).toBe(true);
 
-    // Validate obfuscated code is still valid Lua
-    const parseResult = parseLua(result.code!);
-    expect(parseResult.success).toBe(true);
-  });
+		// Validate obfuscated code is still valid Lua
+		const parseResult = parseLua(result.code!);
+		expect(parseResult.success).toBe(true);
+	});
 });
 ```
 
 ### E2E Testing with Playwright
 
 **Test User Workflows:**
+
 ```typescript
-test('complete obfuscation workflow', async ({ page }) => {
-  await page.goto('/');
+test("complete obfuscation workflow", async ({ page }) => {
+	await page.goto("/");
 
-  // Enter code
-  await page.locator('.monaco-editor').click();
-  await page.keyboard.type('local x = 5\nprint(x)');
+	// Enter code
+	await page.locator(".monaco-editor").click();
+	await page.keyboard.type("local x = 5\nprint(x)");
 
-  // Configure settings
-  await page.getByLabel('Mangle Names').click();
-  await page.getByLabel('Minify Code').click();
+	// Configure settings
+	await page.getByLabel("Mangle Names").click();
+	await page.getByLabel("Minify Code").click();
 
-  // Obfuscate
-  await page.getByRole('button', { name: 'Obfuscate' }).click();
+	// Obfuscate
+	await page.getByRole("button", { name: "Obfuscate" }).click();
 
-  // Verify output
-  await expect(page.locator('.output-editor')).toContainText('_0x');
+	// Verify output
+	await expect(page.locator(".output-editor")).toContainText("_0x");
 });
 ```
 
@@ -568,13 +587,13 @@ npm run test:all
 
 ### Coverage Goals
 
-| Component | Target Coverage |
-|-----------|----------------|
-| Parser | > 90% |
-| Obfuscator | > 90% |
-| Generator | > 85% |
-| UI Components | > 70% |
-| Overall | > 85% |
+| Component     | Target Coverage |
+| ------------- | --------------- |
+| Parser        | > 90%           |
+| Obfuscator    | > 90%           |
+| Generator     | > 85%           |
+| UI Components | > 70%           |
+| Overall       | > 85%           |
 
 ---
 
@@ -583,35 +602,38 @@ npm run test:all
 ### ESLint Configuration
 
 `.eslintrc.json`:
+
 ```json
 {
-  "extends": ["next/core-web-vitals"],
-  "rules": {
-    "no-console": "warn",
-    "prefer-const": "error",
-    "@typescript-eslint/no-unused-vars": "error"
-  }
+	"extends": ["next/core-web-vitals"],
+	"rules": {
+		"no-console": "warn",
+		"prefer-const": "error",
+		"@typescript-eslint/no-unused-vars": "error"
+	}
 }
 ```
 
 ### Prettier Configuration
 
 `.prettierrc.json`:
+
 ```json
 {
-  "useTabs": true,
-  "tabWidth": 2,
-  "printWidth": 120,
-  "singleQuote": false,
-  "semi": true,
-  "trailingComma": "es5",
-  "arrowParens": "avoid"
+	"useTabs": true,
+	"tabWidth": 2,
+	"printWidth": 120,
+	"singleQuote": false,
+	"semi": true,
+	"trailingComma": "es5",
+	"arrowParens": "avoid"
 }
 ```
 
 ### Pre-commit Checklist
 
 Before committing:
+
 1. ✅ Run `npm run lint` - Fix all errors
 2. ✅ Run `npm run format` - Format all code
 3. ✅ Run `npm run test` - All tests pass
@@ -621,6 +643,7 @@ Before committing:
 ### Code Review Standards
 
 **Required for PR Approval:**
+
 - All tests passing
 - Code coverage maintained or improved
 - No linting errors
@@ -642,6 +665,7 @@ Output in `.next/` directory.
 ### Environment Variables
 
 **Vercel Deployment:**
+
 1. Go to Project Settings → Environment Variables
 2. Add:
    - `NEXT_PUBLIC_SITE_URL` (e.g., `https://lua-obfuscator.vercel.app`)
@@ -702,20 +726,24 @@ perf: Optimize AST traversal performance
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] E2E tests added/updated
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -737,46 +765,49 @@ Brief description of changes
 ### Custom Monaco Themes
 
 Edit `components/CodeEditor.tsx`:
+
 ```typescript
-editor.defineTheme('custom-theme', {
-  base: 'vs-dark',
-  inherit: true,
-  rules: [
-    { token: 'keyword', foreground: 'C678DD' },
-    { token: 'string', foreground: '98C379' },
-    { token: 'number', foreground: 'D19A66' },
-  ],
-  colors: {
-    'editor.background': '#1E1E1E00', // Transparent
-    'editor.lineHighlightBackground': '#2A2A2A',
-  }
+editor.defineTheme("custom-theme", {
+	base: "vs-dark",
+	inherit: true,
+	rules: [
+		{ token: "keyword", foreground: "C678DD" },
+		{ token: "string", foreground: "98C379" },
+		{ token: "number", foreground: "D19A66" },
+	],
+	colors: {
+		"editor.background": "#1E1E1E00", // Transparent
+		"editor.lineHighlightBackground": "#2A2A2A",
+	},
 });
 ```
 
 ### Adding Analytics Events
 
 `lib/analytics-client.ts`:
+
 ```typescript
 export async function trackCustomEvent(eventName: string, params: any) {
-  try {
-    await fetch('/api/analytics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventName,
-        timestamp: new Date().toISOString(),
-        ...params
-      })
-    });
-  } catch (error) {
-    console.error('Analytics error:', error);
-  }
+	try {
+		await fetch("/api/analytics", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				eventName,
+				timestamp: new Date().toISOString(),
+				...params,
+			}),
+		});
+	} catch (error) {
+		console.error("Analytics error:", error);
+	}
 }
 ```
 
 ### Performance Optimization
 
 **Code Splitting:**
+
 ```typescript
 // Lazy load Monaco editor
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
@@ -786,9 +817,10 @@ const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
 ```
 
 **Memoization:**
+
 ```typescript
 const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
-  return prev.value === next.value && prev.readOnly === next.readOnly;
+	return prev.value === next.value && prev.readOnly === next.readOnly;
 });
 ```
 
@@ -801,6 +833,7 @@ const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
 **Issue:** Editor doesn't appear or throws errors
 
 **Solutions:**
+
 1. Clear `.next` cache: `rm -rf .next`
 2. Reinstall dependencies: `rm -rf node_modules && npm install`
 3. Check browser console for errors
@@ -811,6 +844,7 @@ const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
 **Issue:** Tests pass in CI but fail locally
 
 **Solutions:**
+
 1. Update Node.js to version 20.x
 2. Clear test cache: `npm test -- --clearCache`
 3. Check for environment-specific issues
@@ -821,6 +855,7 @@ const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
 **Issue:** `npm run build` fails
 
 **Solutions:**
+
 1. Check TypeScript errors: `npx tsc --noEmit`
 2. Verify all imports are correct
 3. Check for circular dependencies
@@ -831,21 +866,25 @@ const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
 ## Resources
 
 **Official Documentation:**
+
 - [Next.js 15 Docs](https://nextjs.org/docs)
 - [React 19 Docs](https://react.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
 **Testing:**
+
 - [Jest Documentation](https://jestjs.io/docs/getting-started)
 - [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
 **Lua Resources:**
+
 - [Lua 5.3 Reference Manual](https://www.lua.org/manual/5.3/)
 - [luaparse Documentation](https://oxyc.github.io/luaparse/)
 
 **Project-Specific:**
+
 - [API Reference](./API_REFERENCE.md)
 - [Architecture Documentation](./ARCHITECTURE.md)
 - [User Guide](./USER_GUIDE.md)
@@ -855,13 +894,16 @@ const MemoizedEditor = React.memo(CodeEditor, (prev, next) => {
 ## Getting Help
 
 **Questions?**
+
 - Open a [GitHub Discussion](https://github.com/BillChirico/LUA-Obfuscator/discussions)
 - Check existing [Issues](https://github.com/BillChirico/LUA-Obfuscator/issues)
 
 **Found a Bug?**
+
 - Create a detailed [Bug Report](https://github.com/BillChirico/LUA-Obfuscator/issues/new)
 
 **Want to Contribute?**
+
 - Read this guide thoroughly
 - Start with ["good first issue"](https://github.com/BillChirico/LUA-Obfuscator/labels/good%20first%20issue) labels
 - Ask questions before starting major work

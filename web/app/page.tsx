@@ -23,7 +23,19 @@ import {
 import { CodeEditor } from "@/components/CodeEditor";
 import { obfuscateLua } from "@/lib/obfuscator-simple";
 import { BackgroundGradientAnimation } from "@/components/BackgroundGradient";
-import { trackObfuscation, trackCopy, trackDownload } from "@/lib/analytics-client";
+import {
+	trackObfuscation,
+	trackCopy,
+	trackDownload,
+	trackSessionStart,
+	trackProtectionLevelChange,
+	trackFeatureCombination,
+	trackObfuscationPerformance,
+	trackObfuscationMilestone,
+	trackTimeOnPage,
+	trackError,
+	trackSettingsChange,
+} from "@/lib/analytics-client";
 import type { ParseError } from "@/lib/parser";
 
 const DEFAULT_LUA_CODE = `-- Advanced Game Inventory System
@@ -189,6 +201,20 @@ export default function Home() {
 		compressionLevel: 0,
 	});
 
+	const [obfuscationCount, setObfuscationCount] = useState(0);
+	const [pageStartTime] = useState(Date.now());
+
+	// Track session start on mount
+	useEffect(() => {
+		trackSessionStart().catch(err => console.error("Analytics tracking failed:", err));
+
+		// Track time on page on unmount
+		return () => {
+			const timeOnPage = Math.floor((Date.now() - pageStartTime) / 1000);
+			trackTimeOnPage(timeOnPage).catch(err => console.error("Analytics tracking failed:", err));
+		};
+	}, [pageStartTime]);
+
 	// Success animation effect
 	useEffect(() => {
 		if (outputCode && !error) {
@@ -213,6 +239,7 @@ export default function Home() {
 		setCopySuccess(false);
 
 		setTimeout(() => {
+			const startTime = Date.now();
 			const result = obfuscateLua(inputCode, {
 				mangleNames: settings.mangleNames,
 				encodeStrings: settings.encodeStrings,
@@ -221,11 +248,16 @@ export default function Home() {
 				minify: settings.minify,
 				protectionLevel: settings.compressionLevel,
 			});
+			const duration = Date.now() - startTime;
 
 			if (result.success && result.code) {
 				setOutputCode(result.code);
 				setError(null);
 				setInputError(undefined);
+
+				// Update obfuscation count
+				const newCount = obfuscationCount + 1;
+				setObfuscationCount(newCount);
 
 				// Track obfuscation event
 				const obfuscationType =
@@ -244,10 +276,40 @@ export default function Home() {
 					codeSize: inputCode.length,
 					protectionLevel: settings.compressionLevel,
 				}).catch(err => console.error("Analytics tracking failed:", err));
+
+				// Track performance metrics
+				const sizeRatio = result.code.length / inputCode.length;
+				trackObfuscationPerformance({
+					inputSize: inputCode.length,
+					outputSize: result.code.length,
+					duration: duration,
+					sizeRatio: sizeRatio,
+				}).catch(err => console.error("Analytics tracking failed:", err));
+
+				// Track feature combination
+				trackFeatureCombination({
+					mangleNames: settings.mangleNames,
+					encodeStrings: settings.encodeStrings,
+					encodeNumbers: settings.encodeNumbers,
+					controlFlow: settings.controlFlow,
+					minify: settings.minify,
+					protectionLevel: settings.compressionLevel,
+				}).catch(err => console.error("Analytics tracking failed:", err));
+
+				// Track milestones (1st, 5th, 10th, 25th, 50th obfuscation)
+				if ([1, 5, 10, 25, 50].includes(newCount)) {
+					trackObfuscationMilestone(newCount).catch(err => console.error("Analytics tracking failed:", err));
+				}
 			} else {
 				setError(result.error || "Failed to obfuscate code");
 				setInputError(result.errorDetails);
 				setOutputCode("");
+
+				// Track error event
+				trackError({
+					errorType: result.errorDetails ? "parse_error" : "obfuscation_error",
+					errorMessage: result.error,
+				}).catch(err => console.error("Analytics tracking failed:", err));
 			}
 
 			setIsProcessing(false);
@@ -486,7 +548,12 @@ export default function Home() {
 										<Switch
 											id="mangle-names"
 											checked={settings.mangleNames}
-											onCheckedChange={checked => setSettings({ ...settings, mangleNames: checked })}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, mangleNames: checked });
+												trackSettingsChange({ setting: "mangleNames", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
 										/>
 									</div>
 
@@ -506,7 +573,12 @@ export default function Home() {
 										<Switch
 											id="encode-strings"
 											checked={settings.encodeStrings}
-											onCheckedChange={checked => setSettings({ ...settings, encodeStrings: checked })}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, encodeStrings: checked });
+												trackSettingsChange({ setting: "encodeStrings", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
 										/>
 									</div>
 
@@ -523,7 +595,12 @@ export default function Home() {
 										<Switch
 											id="minify"
 											checked={settings.minify}
-											onCheckedChange={checked => setSettings({ ...settings, minify: checked })}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, minify: checked });
+												trackSettingsChange({ setting: "minify", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
 										/>
 									</div>
 								</div>
@@ -551,7 +628,12 @@ export default function Home() {
 										<Switch
 											id="encode-numbers"
 											checked={settings.encodeNumbers}
-											onCheckedChange={checked => setSettings({ ...settings, encodeNumbers: checked })}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, encodeNumbers: checked });
+												trackSettingsChange({ setting: "encodeNumbers", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
 										/>
 									</div>
 
@@ -568,7 +650,12 @@ export default function Home() {
 										<Switch
 											id="control-flow"
 											checked={settings.controlFlow}
-											onCheckedChange={checked => setSettings({ ...settings, controlFlow: checked })}
+											onCheckedChange={checked => {
+												setSettings({ ...settings, controlFlow: checked });
+												trackSettingsChange({ setting: "controlFlow", value: checked }).catch(err =>
+													console.error("Analytics tracking failed:", err)
+												);
+											}}
 										/>
 									</div>
 								</div>
@@ -604,6 +691,8 @@ export default function Home() {
 											value={[settings.compressionLevel]}
 											onValueChange={value => {
 												const level = value[0];
+												const oldLevel = settings.compressionLevel;
+
 												setSettings({
 													...settings,
 													compressionLevel: level,
@@ -613,6 +702,15 @@ export default function Home() {
 													encodeNumbers: level >= 60,
 													controlFlow: level >= 80,
 												});
+
+												// Track protection level change
+												if (oldLevel !== level) {
+													trackProtectionLevelChange({
+														oldLevel,
+														newLevel: level,
+														changeType: "slider",
+													}).catch(err => console.error("Analytics tracking failed:", err));
+												}
 											}}
 											max={100}
 											step={10}

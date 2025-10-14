@@ -19,37 +19,36 @@ Complete API documentation for the Lua Obfuscator engine.
 Main entry point for obfuscating Lua source code.
 
 **Signature:**
+
 ```typescript
-function obfuscateLua(
-  code: string,
-  options?: ObfuscationOptions
-): ObfuscationResult
+function obfuscateLua(code: string, options?: ObfuscationOptions): ObfuscationResult;
 ```
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `code` | `string` | Yes | Lua source code to obfuscate |
-| `options` | `ObfuscationOptions` | No | Configuration options (see below) |
+| Parameter | Type                 | Required | Description                       |
+| --------- | -------------------- | -------- | --------------------------------- |
+| `code`    | `string`             | Yes      | Lua source code to obfuscate      |
+| `options` | `ObfuscationOptions` | No       | Configuration options (see below) |
 
 **Returns:** `ObfuscationResult`
 
 **Example:**
-```typescript
-import { obfuscateLua } from '@/lib/obfuscator-simple';
 
-const result = obfuscateLua('local x = 5\nprint(x)', {
-  mangleNames: true,
-  encodeStrings: true,
-  minify: true,
-  protectionLevel: 50
+```typescript
+import { obfuscateLua } from "@/lib/obfuscator-simple";
+
+const result = obfuscateLua("local x = 5\nprint(x)", {
+	mangleNames: true,
+	encodeStrings: true,
+	minify: true,
+	protectionLevel: 50,
 });
 
 if (result.success) {
-  console.log(result.code);
+	console.log(result.code);
 } else {
-  console.error(result.error);
+	console.error(result.error);
 }
 ```
 
@@ -60,30 +59,32 @@ if (result.success) {
 Parses Lua source code into an Abstract Syntax Tree (AST).
 
 **Signature:**
+
 ```typescript
-function parseLua(code: string): ParseResult
+function parseLua(code: string): ParseResult;
 ```
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `code` | `string` | Yes | Lua source code to parse |
+| Parameter | Type     | Required | Description              |
+| --------- | -------- | -------- | ------------------------ |
+| `code`    | `string` | Yes      | Lua source code to parse |
 
 **Returns:** `ParseResult`
 
 **Example:**
-```typescript
-import { parseLua } from '@/lib/parser';
 
-const result = parseLua('local x = 5');
+```typescript
+import { parseLua } from "@/lib/parser";
+
+const result = parseLua("local x = 5");
 
 if (result.success) {
-  console.log('AST:', result.ast);
+	console.log("AST:", result.ast);
 } else {
-  console.error('Parse error:', result.error);
-  console.error('Line:', result.errorDetails?.line);
-  console.error('Column:', result.errorDetails?.column);
+	console.error("Parse error:", result.error);
+	console.error("Line:", result.errorDetails?.line);
+	console.error("Column:", result.errorDetails?.column);
 }
 ```
 
@@ -94,24 +95,26 @@ if (result.success) {
 Validates Lua source code syntax.
 
 **Signature:**
+
 ```typescript
-function validateLua(code: string): boolean
+function validateLua(code: string): boolean;
 ```
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `code` | `string` | Yes | Lua source code to validate |
+| Parameter | Type     | Required | Description                 |
+| --------- | -------- | -------- | --------------------------- |
+| `code`    | `string` | Yes      | Lua source code to validate |
 
 **Returns:** `boolean` - `true` if valid, `false` otherwise
 
 **Example:**
-```typescript
-import { validateLua } from '@/lib/parser';
 
-if (validateLua('local x = 5')) {
-  console.log('Valid Lua code');
+```typescript
+import { validateLua } from "@/lib/parser";
+
+if (validateLua("local x = 5")) {
+	console.log("Valid Lua code");
 }
 ```
 
@@ -122,27 +125,29 @@ if (validateLua('local x = 5')) {
 Converts an AST back to Lua source code.
 
 **Signature:**
+
 ```typescript
-function generateLua(ast: any): string
+function generateLua(ast: any): string;
 ```
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ast` | `any` | Yes | Lua AST from luaparse |
+| Parameter | Type  | Required | Description           |
+| --------- | ----- | -------- | --------------------- |
+| `ast`     | `any` | Yes      | Lua AST from luaparse |
 
 **Returns:** `string` - Generated Lua code
 
 **Example:**
-```typescript
-import { parseLua } from '@/lib/parser';
-import { generateLua } from '@/lib/generator';
 
-const parseResult = parseLua('local x = 5');
+```typescript
+import { parseLua } from "@/lib/parser";
+import { generateLua } from "@/lib/generator";
+
+const parseResult = parseLua("local x = 5");
 if (parseResult.success) {
-  const code = generateLua(parseResult.ast);
-  console.log(code); // 'local x = 5'
+	const code = generateLua(parseResult.ast);
+	console.log(code); // 'local x = 5'
 }
 ```
 
@@ -156,27 +161,28 @@ Configuration options for the obfuscation process.
 
 ```typescript
 interface ObfuscationOptions {
-  /** Replace variable/function names with hex identifiers */
-  mangleNames?: boolean;
+	/** Replace variable/function names with hex identifiers */
+	mangleNames?: boolean;
 
-  /** Encode string literals using string.char() */
-  encodeStrings?: boolean;
+	/** Encode string literals using string.char() */
+	encodeStrings?: boolean;
 
-  /** Encode numeric literals as mathematical expressions */
-  encodeNumbers?: boolean;
+	/** Encode numeric literals as mathematical expressions */
+	encodeNumbers?: boolean;
 
-  /** Add opaque predicates to control flow */
-  controlFlow?: boolean;
+	/** Add opaque predicates to control flow */
+	controlFlow?: boolean;
 
-  /** Remove comments and whitespace */
-  minify?: boolean;
+	/** Remove comments and whitespace */
+	minify?: boolean;
 
-  /** Protection level (0-100%) */
-  protectionLevel?: number;
+	/** Protection level (0-100%) */
+	protectionLevel?: number;
 }
 ```
 
 **Default Values:**
+
 ```typescript
 {
   mangleNames: true,
@@ -190,14 +196,14 @@ interface ObfuscationOptions {
 
 **Protection Level Mapping:**
 
-| Level | Enabled Techniques |
-|-------|-------------------|
-| 0% | None (manual control only) |
-| 10-19% | Minify |
-| 20-39% | Minify + Mangle Names |
-| 40-59% | Minify + Mangle Names + Encode Strings |
-| 60-79% | Minify + Mangle Names + Encode Strings + Encode Numbers |
-| 80-100% | All techniques (Maximum Protection) |
+| Level   | Enabled Techniques                                      |
+| ------- | ------------------------------------------------------- |
+| 0%      | None (manual control only)                              |
+| 10-19%  | Minify                                                  |
+| 20-39%  | Minify + Mangle Names                                   |
+| 40-59%  | Minify + Mangle Names + Encode Strings                  |
+| 60-79%  | Minify + Mangle Names + Encode Strings + Encode Numbers |
+| 80-100% | All techniques (Maximum Protection)                     |
 
 ---
 
@@ -207,21 +213,22 @@ Result object returned by `obfuscateLua()`.
 
 ```typescript
 interface ObfuscationResult {
-  /** Whether obfuscation succeeded */
-  success: boolean;
+	/** Whether obfuscation succeeded */
+	success: boolean;
 
-  /** Obfuscated code (if successful) */
-  code?: string;
+	/** Obfuscated code (if successful) */
+	code?: string;
 
-  /** Error message (if failed) */
-  error?: string;
+	/** Error message (if failed) */
+	error?: string;
 
-  /** Detailed error information (if parse failed) */
-  errorDetails?: ParseError;
+	/** Detailed error information (if parse failed) */
+	errorDetails?: ParseError;
 }
 ```
 
 **Success Example:**
+
 ```typescript
 {
   success: true,
@@ -230,6 +237,7 @@ interface ObfuscationResult {
 ```
 
 **Failure Example:**
+
 ```typescript
 {
   success: false,
@@ -250,17 +258,17 @@ Result object returned by `parseLua()`.
 
 ```typescript
 interface ParseResult {
-  /** Whether parsing succeeded */
-  success: boolean;
+	/** Whether parsing succeeded */
+	success: boolean;
 
-  /** Abstract Syntax Tree (if successful) */
-  ast?: any;
+	/** Abstract Syntax Tree (if successful) */
+	ast?: any;
 
-  /** Error message (if failed) */
-  error?: string;
+	/** Error message (if failed) */
+	error?: string;
 
-  /** Detailed error information */
-  errorDetails?: ParseError;
+	/** Detailed error information */
+	errorDetails?: ParseError;
 }
 ```
 
@@ -272,14 +280,14 @@ Detailed parse error information.
 
 ```typescript
 interface ParseError {
-  /** Error message */
-  message: string;
+	/** Error message */
+	message: string;
 
-  /** Line number where error occurred */
-  line?: number;
+	/** Line number where error occurred */
+	line?: number;
 
-  /** Column number where error occurred */
-  column?: number;
+	/** Column number where error occurred */
+	column?: number;
 }
 ```
 
@@ -292,10 +300,12 @@ interface ParseError {
 Replaces all variable and function names with hexadecimal identifiers like `_0x0000`, `_0x0001`, etc.
 
 **Protected Names:** Lua keywords and standard library functions are preserved:
+
 - Keywords: `and`, `or`, `not`, `if`, `then`, `else`, `end`, `while`, `for`, `do`, `function`, `local`, `return`, etc.
 - Standard library: `print`, `pairs`, `ipairs`, `math`, `string`, `table`, `io`, `os`, etc.
 
 **Before:**
+
 ```lua
 local playerName = "Hero"
 function getPlayerName()
@@ -304,6 +314,7 @@ end
 ```
 
 **After:**
+
 ```lua
 local _0x0000 = "Hero"
 function _0x0001()
@@ -318,16 +329,19 @@ end
 Converts string literals to byte arrays using `string.char()`.
 
 **Before:**
+
 ```lua
 print("Hello, World!")
 ```
 
 **After:**
+
 ```lua
 print(string.char(72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33))
 ```
 
 **Special Handling:**
+
 - Empty strings are not encoded
 - Escape sequences (`\n`, `\t`, `\r`, `\\`, `\"`, `\'`) are properly converted to their byte values
 
@@ -338,24 +352,28 @@ print(string.char(72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33))
 Transforms numeric literals into mathematical expressions.
 
 **Strategies:**
+
 1. **Split and Add:** `100` → `(50 + 50)`
 2. **Multiply and Divide:** `100` → `(200 / 2)`
 3. **Add and Subtract:** `100` → `(150 - 50)`
 4. **Bitwise XOR:** `100` → `(173 ^ 205)`
 
 **Before:**
+
 ```lua
 local health = 100
 local damage = 25
 ```
 
 **After:**
+
 ```lua
 local health = (50 + 50)
 local damage = (50 / 2)
 ```
 
 **Notes:**
+
 - Small numbers (0-3) are not encoded for efficiency
 - Protection level controls encoding probability
 - Decimals use appropriate strategies to avoid precision loss
@@ -367,6 +385,7 @@ local damage = (50 / 2)
 Adds opaque predicates (always-true conditions) to complicate analysis.
 
 **Before:**
+
 ```lua
 if x > 5 then
   print("High")
@@ -374,6 +393,7 @@ end
 ```
 
 **After:**
+
 ```lua
 if (1 + 1 == 2) and x > 5 then
   print("High")
@@ -381,12 +401,14 @@ end
 ```
 
 **Opaque Predicates:**
+
 - `(1 + 1 == 2)` - Always true
 - `(2 * 3 > 5)` - Always true
 - `(10 - 5 == 5)` - Always true
 - `(1 * 1 >= 0)` - Always true
 
 **Applies to:**
+
 - `if` statements
 - `while` loops
 - `repeat-until` loops
@@ -398,6 +420,7 @@ end
 Removes unnecessary content to reduce code size.
 
 **Removes:**
+
 - Single-line comments (`--`)
 - Multi-line comments (`--[[ ]]`)
 - Excessive whitespace
@@ -405,6 +428,7 @@ Removes unnecessary content to reduce code size.
 - Leading/trailing whitespace
 
 **Before:**
+
 ```lua
 -- Calculate total
 local x = 5  -- initial value
@@ -414,6 +438,7 @@ print(x)
 ```
 
 **After:**
+
 ```lua
 local x = 5
 print(x)
@@ -428,6 +453,7 @@ print(x)
 #### Syntax Errors
 
 **Error:**
+
 ```typescript
 {
   success: false,
@@ -449,6 +475,7 @@ print(x)
 #### Invalid Lua Version
 
 **Error:**
+
 ```typescript
 {
   success: false,
@@ -468,15 +495,15 @@ print(x)
 const result = obfuscateLua(code, options);
 
 if (!result.success) {
-  console.error('Obfuscation failed:', result.error);
+	console.error("Obfuscation failed:", result.error);
 
-  if (result.errorDetails) {
-    const { line, column, message } = result.errorDetails;
-    console.error(`Parse error at line ${line}, column ${column}: ${message}`);
+	if (result.errorDetails) {
+		const { line, column, message } = result.errorDetails;
+		console.error(`Parse error at line ${line}, column ${column}: ${message}`);
 
-    // Highlight error in editor
-    editor.highlightLine(line);
-  }
+		// Highlight error in editor
+		editor.highlightLine(line);
+	}
 }
 ```
 
@@ -487,7 +514,7 @@ if (!result.success) {
 ### Basic Usage
 
 ```typescript
-import { obfuscateLua } from '@/lib/obfuscator-simple';
+import { obfuscateLua } from "@/lib/obfuscator-simple";
 
 const code = `
 local function greet(name)
@@ -506,12 +533,12 @@ console.log(result.code);
 
 ```typescript
 const result = obfuscateLua(code, {
-  mangleNames: true,
-  encodeStrings: true,
-  encodeNumbers: true,
-  controlFlow: true,
-  minify: true,
-  protectionLevel: 100  // Maximum protection
+	mangleNames: true,
+	encodeStrings: true,
+	encodeNumbers: true,
+	controlFlow: true,
+	minify: true,
+	protectionLevel: 100, // Maximum protection
 });
 ```
 
@@ -535,14 +562,14 @@ const maximum = obfuscateLua(code, { protectionLevel: 100 });
 ### Validation Before Obfuscation
 
 ```typescript
-import { validateLua } from '@/lib/parser';
-import { obfuscateLua } from '@/lib/obfuscator-simple';
+import { validateLua } from "@/lib/parser";
+import { obfuscateLua } from "@/lib/obfuscator-simple";
 
 if (validateLua(code)) {
-  const result = obfuscateLua(code);
-  // Process result...
+	const result = obfuscateLua(code);
+	// Process result...
 } else {
-  console.error('Invalid Lua syntax');
+	console.error("Invalid Lua syntax");
 }
 ```
 
@@ -551,22 +578,22 @@ if (validateLua(code)) {
 ### Round-Trip Validation
 
 ```typescript
-import { parseLua } from '@/lib/parser';
-import { generateLua } from '@/lib/generator';
-import { obfuscateLua } from '@/lib/obfuscator-simple';
+import { parseLua } from "@/lib/parser";
+import { generateLua } from "@/lib/generator";
+import { obfuscateLua } from "@/lib/obfuscator-simple";
 
 // Obfuscate code
 const obfResult = obfuscateLua(code);
 
 // Validate obfuscated code is still valid Lua
 if (obfResult.success) {
-  const parseResult = parseLua(obfResult.code!);
+	const parseResult = parseLua(obfResult.code!);
 
-  if (parseResult.success) {
-    console.log('✓ Obfuscated code is valid');
-  } else {
-    console.error('✗ Obfuscation corrupted code');
-  }
+	if (parseResult.success) {
+		console.log("✓ Obfuscated code is valid");
+	} else {
+		console.error("✗ Obfuscation corrupted code");
+	}
 }
 ```
 
@@ -620,37 +647,40 @@ export function LuaObfuscator() {
 
 ### Execution Time
 
-| Technique | Performance Impact |
-|-----------|-------------------|
-| Minify | Minimal (faster execution) |
-| Mangle Names | Minimal |
-| Encode Strings | Low (runtime decoding overhead) |
-| Encode Numbers | Low (runtime calculation overhead) |
-| Control Flow | Moderate (additional condition checks) |
+| Technique      | Performance Impact                     |
+| -------------- | -------------------------------------- |
+| Minify         | Minimal (faster execution)             |
+| Mangle Names   | Minimal                                |
+| Encode Strings | Low (runtime decoding overhead)        |
+| Encode Numbers | Low (runtime calculation overhead)     |
+| Control Flow   | Moderate (additional condition checks) |
 
 ### Code Size
 
-| Technique | Size Impact |
-|-----------|-------------|
-| Minify | -30% to -50% (reduces size) |
-| Mangle Names | Minimal |
+| Technique      | Size Impact                     |
+| -------------- | ------------------------------- |
+| Minify         | -30% to -50% (reduces size)     |
+| Mangle Names   | Minimal                         |
 | Encode Strings | +100% to +300% (increases size) |
-| Encode Numbers | +50% to +150% (increases size) |
-| Control Flow | +20% to +40% (increases size) |
+| Encode Numbers | +50% to +150% (increases size)  |
+| Control Flow   | +20% to +40% (increases size)   |
 
 ### Recommendations
 
 **For Production Use:**
+
 - Enable `mangleNames` and `minify`
 - Use `protectionLevel: 40-60` for balanced protection
 - Avoid `encodeNumbers` and `controlFlow` unless high security is critical
 
 **For Maximum Protection:**
+
 - Use `protectionLevel: 100`
 - All techniques enabled
 - Accept performance trade-offs
 
 **For Development/Testing:**
+
 - Use `protectionLevel: 0-20`
 - Keep code readable for debugging
 - Enable `minify` only
@@ -661,13 +691,14 @@ export function LuaObfuscator() {
 
 The obfuscator runs entirely in the browser:
 
-| Feature | Requirement |
-|---------|-------------|
-| JavaScript Engine | ES2015+ |
-| Memory | 50MB minimum |
-| Processing | Modern CPU (2015+) |
+| Feature           | Requirement        |
+| ----------------- | ------------------ |
+| JavaScript Engine | ES2015+            |
+| Memory            | 50MB minimum       |
+| Processing        | Modern CPU (2015+) |
 
 **Supported Browsers:**
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+

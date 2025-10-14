@@ -162,3 +162,244 @@ export async function trackError(params: { errorType: string; errorMessage?: str
 		},
 	]);
 }
+
+/**
+ * Track session start
+ * Call this when the app first loads
+ */
+export async function trackSessionStart(): Promise<void> {
+	const isReturningUser = localStorage.getItem("has_visited") === "true";
+	await trackEvent([
+		{
+			name: "session_start",
+			params: {
+				user_type: isReturningUser ? "returning" : "new",
+				timestamp: Date.now(),
+			},
+		},
+	]);
+	localStorage.setItem("has_visited", "true");
+}
+
+/**
+ * Track protection level change
+ */
+export async function trackProtectionLevelChange(params: {
+	oldLevel: number;
+	newLevel: number;
+	changeType: "slider" | "preset";
+}): Promise<void> {
+	await trackEvent([
+		{
+			name: "protection_level_change",
+			params: {
+				old_level: params.oldLevel,
+				new_level: params.newLevel,
+				change_type: params.changeType,
+				level_difference: Math.abs(params.newLevel - params.oldLevel),
+			},
+		},
+	]);
+}
+
+/**
+ * Track sample code selection
+ */
+export async function trackSampleCodeUsed(sampleName: string): Promise<void> {
+	await trackEvent([
+		{
+			name: "sample_code_selected",
+			params: {
+				sample_name: sampleName,
+			},
+		},
+	]);
+}
+
+/**
+ * Track code input event
+ * Tracks when user starts typing or pastes code
+ */
+export async function trackCodeInput(params: {
+	inputMethod: "typing" | "paste" | "sample";
+	codeLength: number;
+	hasExistingCode: boolean;
+}): Promise<void> {
+	await trackEvent([
+		{
+			name: "code_input",
+			params: {
+				input_method: params.inputMethod,
+				code_length: params.codeLength,
+				has_existing_code: params.hasExistingCode,
+			},
+		},
+	]);
+}
+
+/**
+ * Track clear/reset action
+ */
+export async function trackClearCode(clearType: "input" | "output" | "both"): Promise<void> {
+	await trackEvent([
+		{
+			name: "clear_code",
+			params: {
+				clear_type: clearType,
+			},
+		},
+	]);
+}
+
+/**
+ * Track obfuscation performance
+ */
+export async function trackObfuscationPerformance(params: {
+	inputSize: number;
+	outputSize: number;
+	duration: number;
+	sizeRatio: number;
+}): Promise<void> {
+	await trackEvent([
+		{
+			name: "obfuscation_performance",
+			params: {
+				input_size: params.inputSize,
+				output_size: params.outputSize,
+				duration_ms: params.duration,
+				size_ratio: params.sizeRatio,
+				size_increase_percent: ((params.outputSize - params.inputSize) / params.inputSize) * 100,
+			},
+		},
+	]);
+}
+
+/**
+ * Track feature combination usage
+ * Helps understand which combinations of settings are most popular
+ */
+export async function trackFeatureCombination(params: {
+	mangleNames: boolean;
+	encodeStrings: boolean;
+	encodeNumbers: boolean;
+	controlFlow: boolean;
+	minify: boolean;
+	protectionLevel: number;
+}): Promise<void> {
+	const enabledFeatures = [];
+	if (params.mangleNames) enabledFeatures.push("mangle");
+	if (params.encodeStrings) enabledFeatures.push("strings");
+	if (params.encodeNumbers) enabledFeatures.push("numbers");
+	if (params.controlFlow) enabledFeatures.push("control_flow");
+	if (params.minify) enabledFeatures.push("minify");
+
+	await trackEvent([
+		{
+			name: "feature_combination",
+			params: {
+				features: enabledFeatures.join(","),
+				feature_count: enabledFeatures.length,
+				protection_level: params.protectionLevel,
+			},
+		},
+	]);
+}
+
+/**
+ * Track time spent on page
+ * Call this periodically or before page unload
+ */
+export async function trackTimeOnPage(seconds: number): Promise<void> {
+	await trackEvent([
+		{
+			name: "time_on_page",
+			params: {
+				seconds: seconds,
+				minutes: Math.floor(seconds / 60),
+			},
+		},
+	]);
+}
+
+/**
+ * Track successful obfuscation milestone
+ * For tracking user engagement milestones
+ */
+export async function trackObfuscationMilestone(count: number): Promise<void> {
+	await trackEvent([
+		{
+			name: "obfuscation_milestone",
+			params: {
+				total_obfuscations: count,
+				milestone: count >= 50 ? "power_user" : count >= 10 ? "regular_user" : "new_user",
+			},
+		},
+	]);
+}
+
+/**
+ * Track code comparison view
+ * When users compare input vs output
+ */
+export async function trackCodeComparison(params: { viewDuration: number; hadSideScroll: boolean }): Promise<void> {
+	await trackEvent([
+		{
+			name: "code_comparison",
+			params: {
+				view_duration_seconds: params.viewDuration,
+				had_side_scroll: params.hadSideScroll,
+			},
+		},
+	]);
+}
+
+/**
+ * Track UI interaction
+ * For tracking specific UI element interactions
+ */
+export async function trackUIInteraction(params: { element: string; action: string; context?: string }): Promise<void> {
+	await trackEvent([
+		{
+			name: "ui_interaction",
+			params: {
+				element_name: params.element,
+				interaction_type: params.action,
+				context: params.context,
+			},
+		},
+	]);
+}
+
+/**
+ * Track share action (if implemented)
+ */
+export async function trackShare(method: "link" | "social" | "embed"): Promise<void> {
+	await trackEvent([
+		{
+			name: "share_app",
+			params: {
+				share_method: method,
+			},
+		},
+	]);
+}
+
+/**
+ * Track feedback submission (if implemented)
+ */
+export async function trackFeedback(params: {
+	rating?: number;
+	feedbackType: "bug" | "feature" | "general";
+	hasMessage: boolean;
+}): Promise<void> {
+	await trackEvent([
+		{
+			name: "feedback_submitted",
+			params: {
+				rating: params.rating,
+				feedback_type: params.feedbackType,
+				has_message: params.hasMessage,
+			},
+		},
+	]);
+}
