@@ -40,3 +40,5 @@ yarn-error.log*
 test-results.json
 code-review-report.json
 test-output.txt
+test-results/.last-run.json
+chrome-results.json

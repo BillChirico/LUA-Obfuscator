@@ -11,8 +11,7 @@ export default defineConfig({
 	testDir: "./__tests__/e2e",
 
 	// Maximum time one test can run for
-	// Increased to 90s for complex obfuscation operations and SSR handling
-	timeout: 90 * 1000,
+	timeout: 60 * 1000,
 
 	// Run tests in files in parallel
 	fullyParallel: true,
@@ -40,11 +39,11 @@ export default defineConfig({
 		// Video on first retry
 		video: "retain-on-failure",
 
-		// Navigation timeout - increased for slow page loads and SSR issues
+		// Navigation timeout
 		navigationTimeout: 30 * 1000,
 
-		// Action timeout - increased for complex interactions
-		actionTimeout: 20 * 1000,
+		// Action timeout
+		actionTimeout: 30 * 1000,
 	},
 
 	// Configure projects for major browsers and devices
@@ -86,7 +85,5 @@ export default defineConfig({
 	webServer: {
 		command: "npm run dev",
 		url: "http://localhost:3000",
-		reuseExistingServer: true, // Always reuse existing server to prevent conflicts
-		timeout: 180 * 1000, // Increased timeout for server startup
 	},
 });
