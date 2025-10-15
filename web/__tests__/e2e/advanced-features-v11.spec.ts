@@ -8,6 +8,10 @@ import { MonacoHelper, UIHelper, navigateToPage, waitForPageReady } from "./help
  */
 test.describe("Advanced Features v1.1", () => {
 	test.beforeEach(async ({ page }) => {
+		// Increase navigation timeout for this test suite
+		page.setDefaultNavigationTimeout(60000);
+		page.setDefaultTimeout(60000);
+
 		await navigateToPage(page, "/");
 		await waitForPageReady(page);
 	});

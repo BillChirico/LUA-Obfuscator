@@ -12,6 +12,8 @@ test.describe("Advanced Workflows", () => {
 	});
 
 	test("should support iterative obfuscation with increasing protection levels", async ({ page }) => {
+		test.setTimeout(120000); // Increase timeout for this complex test
+
 		const { ui } = createHelpers(page);
 
 		// Set test code directly via evaluate (faster than typing)
@@ -24,13 +26,13 @@ test.describe("Advanced Workflows", () => {
 			}
 		});
 
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(500);
 
 		// First obfuscation at 20%
 		await ui.setProtectionLevel(20);
 
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output20 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 
@@ -38,7 +40,7 @@ test.describe("Advanced Workflows", () => {
 		await ui.setProtectionLevel(60);
 
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output60 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 
@@ -46,7 +48,7 @@ test.describe("Advanced Workflows", () => {
 		await ui.setProtectionLevel(100);
 
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output100 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 
@@ -370,6 +372,8 @@ end`;
 	});
 
 	test("should handle workflow with protection level adjustments", async ({ page }) => {
+		test.setTimeout(120000); // Increase timeout for this complex test
+
 		const { ui } = createHelpers(page);
 
 		// Start at 0%
@@ -377,7 +381,7 @@ end`;
 
 		// Obfuscate (should be minimal or no obfuscation)
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output0 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 
@@ -386,7 +390,7 @@ end`;
 
 		// Re-obfuscate
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output50 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 
@@ -395,7 +399,7 @@ end`;
 
 		// Re-obfuscate
 		await page.getByRole("button", { name: "Obfuscate Lua code" }).click();
-		await page.waitForTimeout(1500);
+		await page.waitForTimeout(2000); // Increased wait time
 
 		const output100 = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 

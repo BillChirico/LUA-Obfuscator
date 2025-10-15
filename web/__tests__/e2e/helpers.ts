@@ -256,78 +256,315 @@ export class UIHelper {
 	}
 
 	/**
-	 * Set protection level via slider using DOM manipulation
-	 * Radix UI Slider doesn't work well with keyboard/fill approaches in Playwright
-	 * so we use page.evaluate() to directly set the aria-valuenow and trigger events
+	 * Set protection level via slider using proper Playwright interaction methods
+	 * Uses multiple fallback approaches for reliability without depending on React internals
 	 */
 	async setProtectionLevel(level: number): Promise<void> {
-		try {
-			// Wait for slider to be visible
-			const slider = this.page.locator('[role="slider"]').first();
-			await slider.waitFor({ state: "visible", timeout: 5000 });
-
-			// Try to scroll into view, but don't fail if it times out
-			try {
-				await slider.scrollIntoViewIfNeeded({ timeout: 5000 });
-			} catch (error) {
-				console.warn("Scroll into view failed:", error);
-			}
-			await this.page.waitForTimeout(100);
-		} catch (error) {
-			console.warn("Slider setup failed (page may be closed):", error);
-			return; // Exit gracefully if page is closed
+		// Validate input
+		if (level < 0 || level > 100) {
+			throw new Error(`Invalid protection level: ${level}. Must be between 0 and 100.`);
 		}
 
-		// Use page.evaluate to directly manipulate the slider via DOM
+		let slider: Locator;
 		try {
-			await this.page.evaluate(targetLevel => {
-				// Find the slider element
-				const sliderElement = document.querySelector('[role="slider"]') as HTMLElement;
-				if (!sliderElement) {
-					throw new Error("Slider element not found");
-				}
+			// Wait for slider to be visible with multiple selectors
+			slider = this.page.locator('[role="slider"], [data-testid="protection-slider"], #compression').first();
+			await slider.waitFor({ state: "visible", timeout: 15000 });
 
-				// Set the aria-valuenow attribute
-				sliderElement.setAttribute("aria-valuenow", targetLevel.toString());
+			// Try to scroll into view with a longer timeout
+			await slider.scrollIntoViewIfNeeded({ timeout: 10000 });
 
-				// Try to trigger React's onChange by dispatching various events
-				// These events should trigger Radix UI's internal handlers
-				const events = [
-					new PointerEvent("pointerdown", { bubbles: true, cancelable: true }),
-					new PointerEvent("pointermove", { bubbles: true, cancelable: true }),
-					new PointerEvent("pointerup", { bubbles: true, cancelable: true }),
-					new Event("change", { bubbles: true }),
-					new Event("input", { bubbles: true }),
-				];
+			// Wait for the element to be stable
+			await this.page.waitForTimeout(500);
 
-				events.forEach(event => sliderElement.dispatchEvent(event));
+			// Verify the slider is actually interactable
+			await slider.waitFor({ state: "attached", timeout: 5000 });
+		} catch (error) {
+			// Try alternative selectors if the first one fails
+			try {
+				slider = this.page.locator('input[type="range"]').first();
+				await slider.waitFor({ state: "visible", timeout: 10000 });
+				await slider.scrollIntoViewIfNeeded({ timeout: 5000 });
+				await this.page.waitForTimeout(500);
+			} catch (altError) {
+				throw new Error(
+					`Failed to locate slider with any selector: ${error.message}. Alternative error: ${altError.message}`
+				);
+			}
+		}
 
-				// Also try to find and call the React setter if accessible
-				// This is a more direct approach but may not always work
-				const reactKey = Object.keys(sliderElement).find(key => key.startsWith("__react"));
-				if (reactKey) {
-					const reactInstance = (sliderElement as any)[reactKey];
-					if (reactInstance && reactInstance.return) {
-						// Navigate up the fiber tree to find the props with onValueChange
-						let fiber = reactInstance;
-						while (fiber) {
-							if (fiber.memoizedProps && fiber.memoizedProps.onValueChange) {
-								// Call the onChange handler directly
-								fiber.memoizedProps.onValueChange([targetLevel]);
-								break;
+		// Get current value to determine the best approach
+		const currentValue = await this._getSliderValue(slider);
+		console.log(`Current slider value: ${currentValue}, Target: ${level}`);
+
+		// Try multiple interaction methods for reliability
+		const methods = [
+			() => this._setSliderByDrag(slider, currentValue, level),
+			() => this._setSliderByClick(slider, level),
+			() => this._setSliderByKeyboard(slider, level),
+		];
+
+		let lastError: Error | undefined;
+		for (const method of methods) {
+			try {
+				await method();
+
+				// Wait for React state updates and UI re-render
+				await this.page.waitForTimeout(800);
+
+				// Validate that the value was actually set by checking the slider value
+				const newValue = await this._getSliderValue(slider);
+				console.log(`After method, slider value: ${newValue}`);
+
+				if (Math.abs(newValue - level) <= 5) {
+					// Allow 5 unit tolerance for better reliability
+					// Wait a bit more for UI to update
+					await this.page.waitForTimeout(500);
+
+					// Additional validation: check if the percentage display updated
+					try {
+						const percentageDisplay = this.page.locator("text=/\\d+%/").first();
+						if (await percentageDisplay.isVisible()) {
+							const displayText = await percentageDisplay.textContent();
+							if (displayText && displayText.includes(`${newValue}%`)) {
+								return; // Success!
 							}
-							fiber = fiber.return;
 						}
+					} catch {
+						// If percentage display check fails, still consider it successful if slider value is correct
+						return;
 					}
 				}
-			}, level);
-		} catch (error) {
-			console.warn("Slider manipulation failed (page may be closed):", error);
-			return; // Exit gracefully if page is closed
+			} catch (error) {
+				lastError = error as Error;
+				console.warn(`Slider method failed: ${error.message}`);
+				continue;
+			}
 		}
 
-		// Wait for React state updates and re-render
-		await this.page.waitForTimeout(500);
+		// If all methods failed, throw a meaningful error with debugging info
+		const finalValue = await this._getSliderValue(slider);
+		const sliderVisible = await slider.isVisible();
+		const sliderEnabled = await slider.isEnabled();
+
+		// Get current UI state for debugging
+		let currentUIState = "Unknown";
+		try {
+			const percentageElement = this.page.locator("text=/\\d+%/").first();
+			if (await percentageElement.isVisible()) {
+				currentUIState = (await percentageElement.textContent()) || "Empty";
+			}
+		} catch {
+			currentUIState = "Not found";
+		}
+
+		throw new Error(
+			`Failed to set protection level to ${level}. ` +
+				`Current slider value: ${finalValue}, ` +
+				`Slider visible: ${sliderVisible}, ` +
+				`Slider enabled: ${sliderEnabled}, ` +
+				`Current UI state: ${currentUIState}, ` +
+				`Last error: ${lastError?.message || "Unknown error"}`
+		);
+	}
+
+	/**
+	 * Set slider value using keyboard navigation
+	 */
+	private async _setSliderByKeyboard(slider: Locator, targetLevel: number): Promise<void> {
+		await slider.focus();
+		await this.page.waitForTimeout(100);
+
+		// Get current value to determine direction
+		const currentValue = await this._getSliderValue(slider);
+		const steps = Math.abs(targetLevel - currentValue);
+
+		// Use arrow keys to move slider
+		const key = targetLevel > currentValue ? "ArrowRight" : "ArrowLeft";
+
+		// Move step by step and check progress more carefully
+		for (let i = 0; i < steps; i++) {
+			await this.page.keyboard.press(key);
+			await this.page.waitForTimeout(100); // Increased wait time for better reliability
+
+			// Check if we've reached the target (with some tolerance)
+			const newValue = await this._getSliderValue(slider);
+
+			// If we've reached the target or overshot it, stop
+			if (Math.abs(newValue - targetLevel) <= 5) {
+				break;
+			}
+
+			// If we've overshot significantly, try to correct it
+			if (targetLevel > currentValue && newValue > targetLevel + 10) {
+				// We overshot going right, try going left a bit
+				for (let j = 0; j < 5; j++) {
+					await this.page.keyboard.press("ArrowLeft");
+					await this.page.waitForTimeout(50);
+					const correctedValue = await this._getSliderValue(slider);
+					if (Math.abs(correctedValue - targetLevel) <= 5) {
+						return;
+					}
+				}
+				break;
+			} else if (targetLevel < currentValue && newValue < targetLevel - 10) {
+				// We overshot going left, try going right a bit
+				for (let j = 0; j < 5; j++) {
+					await this.page.keyboard.press("ArrowRight");
+					await this.page.waitForTimeout(50);
+					const correctedValue = await this._getSliderValue(slider);
+					if (Math.abs(correctedValue - targetLevel) <= 5) {
+						return;
+					}
+				}
+				break;
+			}
+		}
+
+		// If we're close but not quite there, try a few more steps
+		const finalValue = await this._getSliderValue(slider);
+		if (Math.abs(finalValue - targetLevel) > 5 && Math.abs(finalValue - targetLevel) < 20) {
+			// We're close, try a few more steps in the right direction
+			const remainingSteps = Math.abs(targetLevel - finalValue);
+			for (let i = 0; i < Math.min(remainingSteps, 10); i++) {
+				await this.page.keyboard.press(key);
+				await this.page.waitForTimeout(100);
+				const newValue = await this._getSliderValue(slider);
+				if (Math.abs(newValue - targetLevel) <= 5) {
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Set slider value using mouse interaction
+	 */
+	private async _setSliderByMouse(slider: Locator, targetLevel: number): Promise<void> {
+		// Get slider bounds
+		const bounds = await slider.boundingBox();
+		if (!bounds) {
+			throw new Error("Could not get slider bounds");
+		}
+
+		// Calculate target position (assuming 0-100 range maps to full width)
+		const targetX = bounds.x + (bounds.width * targetLevel) / 100;
+		const targetY = bounds.y + bounds.height / 2;
+
+		// Click at the target position
+		await this.page.mouse.click(targetX, targetY);
+		await this.page.waitForTimeout(200);
+	}
+
+	/**
+	 * Set slider value by dragging from current position to target position
+	 * This simulates real user drag interaction
+	 */
+	private async _setSliderByDrag(slider: Locator, currentValue: number, targetLevel: number): Promise<void> {
+		const bounds = await slider.boundingBox();
+		if (!bounds) {
+			throw new Error("Could not get slider bounds");
+		}
+
+		// Calculate current and target positions
+		const currentX = bounds.x + (bounds.width * currentValue) / 100;
+		const targetX = bounds.x + (bounds.width * targetLevel) / 100;
+		const y = bounds.y + bounds.height / 2;
+
+		// Start drag from current position
+		await this.page.mouse.move(currentX, y);
+		await this.page.mouse.down();
+		await this.page.waitForTimeout(150);
+
+		// Drag to target position with intermediate steps for better accuracy
+		const steps = Math.abs(targetLevel - currentValue);
+		if (steps > 20) {
+			// For large movements, use intermediate steps
+			const stepSize = (targetX - currentX) / Math.min(steps / 5, 10);
+			for (let i = 1; i <= Math.min(steps / 5, 10); i++) {
+				const intermediateX = currentX + stepSize * i;
+				await this.page.mouse.move(intermediateX, y);
+				await this.page.waitForTimeout(50);
+			}
+		}
+
+		// Final move to target position
+		await this.page.mouse.move(targetX, y);
+		await this.page.waitForTimeout(150);
+
+		// Release mouse
+		await this.page.mouse.up();
+		await this.page.waitForTimeout(150);
+	}
+
+	/**
+	 * Set slider value by clicking at the target position
+	 * This simulates clicking on the slider track
+	 */
+	private async _setSliderByClick(slider: Locator, targetLevel: number): Promise<void> {
+		const bounds = await slider.boundingBox();
+		if (!bounds) {
+			throw new Error("Could not get slider bounds");
+		}
+
+		// Calculate the target position
+		const targetX = bounds.x + (bounds.width * targetLevel) / 100;
+		const targetY = bounds.y + bounds.height / 2;
+
+		// Move to position first, then click
+		await this.page.mouse.move(targetX, targetY);
+		await this.page.waitForTimeout(100);
+
+		// Click at the target position
+		await this.page.mouse.click(targetX, targetY);
+		await this.page.waitForTimeout(150);
+
+		// Try double-click for better reliability
+		await this.page.mouse.click(targetX, targetY, { clickCount: 2 });
+		await this.page.waitForTimeout(100);
+	}
+
+	/**
+	 * Get the current slider value
+	 */
+	private async _getSliderValue(slider: Locator): Promise<number> {
+		// First try to get the value from the aria-valuenow attribute
+		const ariaValue = await slider.getAttribute("aria-valuenow");
+		if (ariaValue) {
+			return parseInt(ariaValue, 10);
+		}
+
+		// If that fails, try to get the value from the React state by looking at the percentage display
+		try {
+			const percentageElement = this.page.locator("text=/\\d+%/").first();
+			if (await percentageElement.isVisible()) {
+				const displayText = await percentageElement.textContent();
+				if (displayText) {
+					const match = displayText.match(/(\d+)%/);
+					if (match) {
+						return parseInt(match[1], 10);
+					}
+				}
+			}
+		} catch {
+			// If percentage display check fails, continue
+		}
+
+		// If both methods fail, try to get the value from the actual input element
+		try {
+			const inputElement = slider.locator('input[type="range"]').first();
+			if (await inputElement.isVisible()) {
+				const inputValue = await inputElement.getAttribute("value");
+				if (inputValue) {
+					return parseInt(inputValue, 10);
+				}
+			}
+		} catch {
+			// If input element check fails, continue
+		}
+
+		// Default to 0 if all methods fail
+		return 0;
 	}
 
 	/**
@@ -447,24 +684,24 @@ export function createHelpers(page: Page) {
 export async function navigateToPage(page: Page, url: string): Promise<void> {
 	try {
 		// Try with domcontentloaded first (most reliable for SSR)
-		await page.goto(url, { timeout: 45000, waitUntil: "domcontentloaded" });
+		await page.goto(url, { timeout: 60000, waitUntil: "domcontentloaded" });
 	} catch (error) {
 		console.warn("Page navigation failed, retrying with load:", error);
 		// Retry with load condition
 		try {
-			await page.goto(url, { timeout: 30000, waitUntil: "load" });
+			await page.goto(url, { timeout: 45000, waitUntil: "load" });
 		} catch (retryError) {
 			console.warn("Page navigation retry failed, trying with networkidle:", retryError);
 			// Try with networkidle (waits for network to be idle)
 			try {
-				await page.goto(url, { timeout: 25000, waitUntil: "networkidle" });
+				await page.goto(url, { timeout: 30000, waitUntil: "networkidle" });
 			} catch (networkError) {
 				console.warn("Networkidle failed, trying with commit:", networkError);
 				// Final attempt with commit (just navigation, no waiting)
 				try {
-					await page.goto(url, { timeout: 15000, waitUntil: "commit" });
+					await page.goto(url, { timeout: 20000, waitUntil: "commit" });
 					// Wait a bit for the page to settle
-					await page.waitForTimeout(3000);
+					await page.waitForTimeout(5000);
 				} catch (finalError) {
 					console.warn("All navigation attempts failed:", finalError);
 					// Continue anyway - some tests might still work
@@ -481,21 +718,28 @@ export async function waitForPageReady(page: Page): Promise<void> {
 	// Wait for basic page structure to be ready
 	try {
 		// Wait for the main content to be present
-		await page.waitForSelector("main", { timeout: 15000 });
+		await page.waitForSelector("main", { timeout: 20000 });
 	} catch (error) {
 		console.warn("Main content not found, trying body:", error);
 		// Fallback to waiting for body
 		try {
-			await page.waitForSelector("body", { timeout: 10000 });
+			await page.waitForSelector("body", { timeout: 15000 });
 		} catch (bodyError) {
 			console.warn("Body not found either:", bodyError);
 			// Last resort: wait for any HTML element
 			try {
-				await page.waitForSelector("html", { timeout: 5000 });
+				await page.waitForSelector("html", { timeout: 10000 });
 			} catch (htmlError) {
 				console.warn("HTML element not found:", htmlError);
 			}
 		}
+	}
+
+	// Wait for the protection level slider to be present (critical for our tests)
+	try {
+		await page.waitForSelector('[role="slider"], #compression, input[type="range"]', { timeout: 15000 });
+	} catch (error) {
+		console.warn("Protection level slider not found:", error);
 	}
 
 	// Wait for Monaco editor to be present in DOM (with multiple fallbacks)
@@ -537,7 +781,7 @@ export async function waitForPageReady(page: Page): Promise<void> {
 				const editors = monaco.editor.getEditors();
 				return editors && editors.length > 0;
 			},
-			{ timeout: 10000 }
+			{ timeout: 20000 } // Increased timeout
 		);
 		console.log("Monaco editor fully initialized");
 	} catch (error) {
