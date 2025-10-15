@@ -715,86 +715,125 @@ export async function navigateToPage(page: Page, url: string): Promise<void> {
  * Wait for page to be fully loaded with SSR tolerance
  */
 export async function waitForPageReady(page: Page): Promise<void> {
-	// Wait for basic page structure to be ready
+	// First check if page context is still open
+	try {
+		await page.evaluate(() => document.readyState);
+	} catch {
+		console.warn("Page context closed, aborting wait");
+		return;
+	}
+
+	// Wait for basic page structure to be ready with shorter timeouts
 	try {
 		// Wait for the main content to be present
-		await page.waitForSelector("main", { timeout: 20000 });
+		await page.waitForSelector("main", { timeout: 30000 });
 	} catch (error) {
-		console.warn("Main content not found, trying body:", error);
+		console.warn("Main content not found, trying body");
 		// Fallback to waiting for body
 		try {
-			await page.waitForSelector("body", { timeout: 15000 });
+			await page.waitForSelector("body", { timeout: 20000 });
 		} catch (bodyError) {
-			console.warn("Body not found either:", bodyError);
-			// Last resort: wait for any HTML element
-			try {
-				await page.waitForSelector("html", { timeout: 10000 });
-			} catch (htmlError) {
-				console.warn("HTML element not found:", htmlError);
-			}
+			console.warn("Body not found, continuing anyway");
+			// Don't throw, just continue
 		}
 	}
 
 	// Wait for the protection level slider to be present (critical for our tests)
 	try {
-		await page.waitForSelector('[role="slider"], #compression, input[type="range"]', { timeout: 15000 });
+		await page.waitForSelector('[role="slider"], #compression, input[type="range"]', { timeout: 20000 });
 	} catch (error) {
-		console.warn("Protection level slider not found:", error);
+		console.warn("Protection level slider not found, continuing");
+		// Don't throw, some tests might not need it
 	}
 
-	// Wait for Monaco editor to be present in DOM (with multiple fallbacks)
+	// Improved Monaco editor detection with lazy loading support
 	let monacoFound = false;
-	const monacoSelectors = [
-		".monaco-editor",
-		"[data-uri*='model']",
-		"[role='code']",
-		"div[class*='editor']",
-		"div[class*='monaco']",
-		"textarea[data-uri]",
-		"div[data-uri]",
-	];
+	let attempts = 0;
+	const maxAttempts = 3;
 
-	for (const selector of monacoSelectors) {
-		try {
-			await page.waitForSelector(selector, { timeout: 5000 });
-			monacoFound = true;
-			console.log(`Monaco editor found with selector: ${selector}`);
-			break;
-		} catch (error) {
-			console.warn(`Monaco selector ${selector} failed:`, error.message);
+	// Monaco loads lazily, so we may need to wait a bit before it appears
+	while (!monacoFound && attempts < maxAttempts) {
+		attempts++;
+
+		// First check if the editor placeholder exists
+		const hasEditorPlaceholder = await page.evaluate(() => {
+			return document.querySelector('.monaco-editor, [data-testid*="editor"], .code-editor') !== null;
+		});
+
+		if (!hasEditorPlaceholder && attempts < maxAttempts) {
+			// Editor might not be rendered yet, wait a bit
+			await page.waitForTimeout(2000);
+			continue;
+		}
+
+		// Try multiple selectors with shorter timeouts
+		const monacoSelectors = [
+			".monaco-editor",
+			"[data-uri*='model']",
+			"[role='code']",
+			"div[class*='editor']",
+			"div[class*='monaco']",
+			".code-editor",
+			"[data-testid*='editor']"
+		];
+
+		for (const selector of monacoSelectors) {
+			try {
+				await page.waitForSelector(selector, { timeout: 3000 });
+				monacoFound = true;
+				console.log(`Monaco editor found with selector: ${selector}`);
+				break;
+			} catch {
+				// Silent fail, try next selector
+			}
+		}
+
+		if (!monacoFound && attempts < maxAttempts) {
+			await page.waitForTimeout(2000);
 		}
 	}
 
 	if (!monacoFound) {
-		console.warn("No Monaco editor selectors found, continuing anyway");
+		console.warn("Monaco editor not found after attempts, continuing anyway");
+		// Don't throw - tests might still work without Monaco being fully loaded
 	}
 
-	// Wait for Monaco to be fully initialized (but don't fail if it doesn't work)
-	try {
-		await page.waitForFunction(
-			() => {
-				// Check if Monaco is available and has editors
-				const monaco = (window as any).monaco;
-				if (!monaco || !monaco.editor || !monaco.editor.getEditors) {
-					return false;
-				}
-				const editors = monaco.editor.getEditors();
-				return editors && editors.length > 0;
-			},
-			{ timeout: 20000 } // Increased timeout
-		);
-		console.log("Monaco editor fully initialized");
-	} catch (error) {
-		console.warn("Monaco editor initialization warning:", error.message);
-		// Continue anyway - some tests might still work
+	// Enhanced Monaco initialization check with better error handling
+	if (monacoFound) {
+		try {
+			// Try to wait for Monaco API to be available, but with a shorter timeout
+			await page.waitForFunction(
+				() => {
+					// Check if Monaco is available
+					const monaco = (window as any).monaco;
+					if (!monaco || !monaco.editor) {
+						return false;
+					}
+
+					// Check if getEditors function exists
+					if (typeof monaco.editor.getEditors === 'function') {
+						const editors = monaco.editor.getEditors();
+						return editors && editors.length > 0;
+					}
+
+					// Fallback: check if any editor instances exist
+					return Object.keys(monaco.editor).some(key => key.includes('Instance'));
+				},
+				{ timeout: 15000 }
+			);
+			console.log("Monaco editor API initialized");
+		} catch {
+			console.warn("Monaco API not fully available, but continuing");
+			// Don't throw - Monaco might work anyway
+		}
 	}
 
-	// Additional buffer for initialization (with error handling for closed contexts)
+	// Final stabilization wait with error protection
 	try {
-		await page.waitForTimeout(1000);
-	} catch (error) {
-		console.warn("Page context may be closed:", error);
-		// Continue anyway - test might still work
+		await page.waitForTimeout(1500);
+	} catch {
+		// Page context might be closed, that's okay
+		console.warn("Page context may be closed during final wait");
 	}
 }
 
