@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { createHelpers, waitForPageReady } from "./helpers";
 
 /**
  * E2E tests for responsive design behavior
@@ -10,10 +11,10 @@ test.describe("Responsive Design", () => {
 
 		test("should display mobile layout correctly", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Header should be visible
-			await expect(page.getByRole("heading", { name: /Lua Obfuscator/i })).toBeVisible();
+			await expect(page.getByRole("heading", { name: /Lua Obfuscator/i }).first()).toBeVisible();
 
 			// Code editors should be stacked vertically (both visible)
 			const inputEditor = page.locator(".monaco-editor").first();
@@ -28,7 +29,7 @@ test.describe("Responsive Design", () => {
 
 		test("should show buttons with text on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All buttons should be visible with text labels
 			const copyButton = page.getByRole("button", { name: "Copy obfuscated code to clipboard" });
@@ -42,7 +43,7 @@ test.describe("Responsive Design", () => {
 
 		test("should allow obfuscation on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Click obfuscate button
 			const obfuscateButton = page.getByRole("button", { name: "Obfuscate Lua code" });
@@ -56,7 +57,7 @@ test.describe("Responsive Design", () => {
 
 		test("should make settings accessible on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Settings section should exist below editors
 			const settingsHeading = page.getByText("Obfuscation Settings");
@@ -75,7 +76,7 @@ test.describe("Responsive Design", () => {
 
 		test("should display tablet layout correctly", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All main sections should be visible
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -85,7 +86,7 @@ test.describe("Responsive Design", () => {
 
 		test("should show full button text on tablet", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Buttons with full text should be visible
 			const copyButton = page.getByRole("button", { name: "Copy obfuscated code to clipboard" });
@@ -97,10 +98,14 @@ test.describe("Responsive Design", () => {
 			await expect(obfuscateButton).toBeVisible();
 		});
 
-		test("should allow full workflow on tablet", async ({ page, context }) => {
+		test("should allow full workflow on tablet", async ({ page, context, browserName }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
-			await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			await waitForPageReady(page);
+			// Safari and Firefox don't support clipboard permissions
+			const skipClipboard = browserName === "webkit" || browserName === "firefox";
+			if (!skipClipboard) {
+				await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			}
 
 			// Toggle settings
 			await page.locator("#mangle-names").click();
@@ -117,10 +122,13 @@ test.describe("Responsive Design", () => {
 			// Copy should work
 			const copyButton = page.getByRole("button", { name: "Copy obfuscated code to clipboard" });
 			await expect(copyButton).toBeEnabled();
-			await copyButton.click();
 
-			const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-			expect(clipboardContent).toBeTruthy();
+			if (!skipClipboard) {
+				await copyButton.click();
+
+				const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+				expect(clipboardContent).toBeTruthy();
+			}
 		});
 	});
 
@@ -129,7 +137,7 @@ test.describe("Responsive Design", () => {
 
 		test("should display desktop layout with side-by-side editors", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All elements should be visible
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -137,12 +145,12 @@ test.describe("Responsive Design", () => {
 			await expect(page.getByText("Obfuscation Settings")).toBeVisible();
 
 			// Subtitle should be visible on desktop
-			await expect(page.getByText("Professional Lua code protection")).toBeVisible();
+			await expect(page.getByText("Professional code protection & security")).toBeVisible();
 		});
 
 		test("should show full UI with all features", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All buttons with full text
 			await expect(page.getByRole("button", { name: "Copy obfuscated code to clipboard" })).toBeVisible();
@@ -158,10 +166,16 @@ test.describe("Responsive Design", () => {
 			await expect(page.locator("#compression")).toBeVisible();
 		});
 
-		test("should handle full workflow smoothly on desktop", async ({ page, context }) => {
+		test("should handle full workflow smoothly on desktop", async ({ page, context, browserName }) => {
+			const { monaco } = createHelpers(page);
+
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
-			await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			await waitForPageReady(page);
+			// Safari and Firefox don't support clipboard permissions
+			const skipClipboard = browserName === "webkit" || browserName === "firefox";
+			if (!skipClipboard) {
+				await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			}
 
 			// Use protection level slider
 			const slider = page.locator("#compression");
@@ -176,14 +190,16 @@ test.describe("Responsive Design", () => {
 			await page.waitForTimeout(500);
 
 			// Verify output
-			const outputContent = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
+			const outputContent = await monaco.getEditorContent(1);
 			expect(outputContent).toBeTruthy();
 			expect(outputContent!.length).toBeGreaterThan(0);
 
 			// Test copy
-			await page.getByRole("button", { name: "Copy obfuscated code to clipboard" }).click();
-			const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-			expect(clipboardContent).toBe(outputContent);
+			if (!skipClipboard) {
+				await page.getByRole("button", { name: "Copy obfuscated code to clipboard" }).click();
+				const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+				expect(clipboardContent).toBe(outputContent);
+			}
 
 			// Download button should be enabled
 			await expect(page.getByRole("button", { name: "Download obfuscated code as .lua file" })).toBeEnabled();
@@ -194,10 +210,10 @@ test.describe("Responsive Design", () => {
 		test("should adapt layout at sm breakpoint (640px)", async ({ page }) => {
 			await page.setViewportSize({ width: 640, height: 800 });
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Subtitle should be visible at sm and above
-			await expect(page.getByText("Professional Lua code protection")).toBeVisible();
+			await expect(page.getByText("Professional code protection & security")).toBeVisible();
 
 			// Button text should be visible
 			await expect(page.getByRole("button", { name: "Copy obfuscated code to clipboard" })).toBeVisible();
@@ -206,7 +222,7 @@ test.describe("Responsive Design", () => {
 		test("should adapt layout at lg breakpoint (1024px)", async ({ page }) => {
 			await page.setViewportSize({ width: 1024, height: 768 });
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Desktop-style layout should be active
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -226,17 +242,17 @@ test.describe("Responsive Design", () => {
 			// Start in portrait
 			await page.setViewportSize({ width: 390, height: 844 });
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Verify layout works in portrait
-			await expect(page.getByText("Lua Obfuscator")).toBeVisible();
+			await expect(page.getByText("Lua Obfuscator").first()).toBeVisible();
 
 			// Switch to landscape
 			await page.setViewportSize({ width: 844, height: 390 });
 			await page.waitForTimeout(300);
 
 			// Layout should still work
-			await expect(page.getByText("Lua Obfuscator")).toBeVisible();
+			await expect(page.getByText("Lua Obfuscator").first()).toBeVisible();
 			await expect(page.getByRole("button", { name: "Obfuscate Lua code" })).toBeVisible();
 		});
 	});
@@ -246,7 +262,7 @@ test.describe("Responsive Design", () => {
 
 		test("should support touch interactions on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Tap obfuscate button
 			await page.locator('[aria-label*="Obfuscate"]').tap();
@@ -259,7 +275,7 @@ test.describe("Responsive Design", () => {
 
 		test("should support touch toggle for switches", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Tap switches
 			await page.locator("#mangle-names").tap();

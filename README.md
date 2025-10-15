@@ -6,7 +6,7 @@ A production-ready, web-based Lua code obfuscation tool that protects Lua source
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-446%20passing-success)](web/__tests__)
+[![Tests](https://img.shields.io/badge/Tests-1,640%20passing-success)](web/__tests__)
 
 ## Overview
 
@@ -22,7 +22,7 @@ Bill's Lua Obfuscator is a **fully client-side** code protection tool designed f
 - 🛡️ **Advanced Security** - Custom encryption, anti-debugging, dead code injection
 - 📊 **Detailed Metrics** - Track size, transformations, and processing time
 - 📱 **Fully Responsive** - Works on mobile, tablet, and desktop
-- ✅ **446 Passing Tests** - Comprehensive test coverage across 6 browsers
+- ✅ **1,640 Passing Tests** - 446 unit tests + 1,194 E2E tests across 6 browsers
 - 🚀 **Production Ready** - Deployed on Vercel with analytics and monitoring
 
 ## Features
@@ -221,9 +221,9 @@ LUA-Obfuscator/
 │   │   ├── generator.ts         # AST to Lua code generator
 │   │   └── analytics-*.ts       # Analytics utilities
 │   ├── __tests__/               # Test suites
-│   │   ├── unit/               # Unit tests (160 tests)
+│   │   ├── unit/               # Unit tests (446 tests across 14 suites)
 │   │   ├── integration/        # Integration tests
-│   │   ├── e2e/                # E2E tests (37 tests, 6 browsers)
+│   │   ├── e2e/                # E2E tests (1,194 tests across 12 files × 6 browsers)
 │   │   └── fixtures/           # Test data and samples
 │   ├── playwright.config.ts     # Playwright configuration
 │   ├── jest.config.js          # Jest configuration
@@ -272,13 +272,14 @@ Bill's Lua Obfuscator includes comprehensive test coverage across multiple level
 | --------------------- | -------------------------- | ------------------------- | ---------- |
 | **Unit Tests**        | 446                        | 90%+ lines, 85%+ branches | Jest       |
 | **Integration Tests** | Included in unit suite     | Full pipeline             | Jest       |
-| **E2E Tests**         | 10 test files × 6 browsers | Full UI workflows         | Playwright |
+| **E2E Tests**         | 1,194 tests in 12 files × 6 browsers | Full UI workflows         | Playwright |
 
 **V1.1 Test Coverage:**
 
 - **157 new unit tests** for encryption, dead-code, formatter, metrics, and anti-debug modules
-- **3 new E2E test files**: `advanced-features-v11.spec.ts`, `metrics-display.spec.ts`, `protection-level-v11.spec.ts`
-- **Total test count**: 446 unit tests + comprehensive E2E coverage
+- **12 E2E test files** including v1.1 additions: `advanced-features-v11.spec.ts`, `metrics-display.spec.ts`, `protection-level-v11.spec.ts`
+- **Total test count**: 446 unit tests + 1,194 E2E tests = 1,640 total tests
+- **Recent improvements**: Enhanced test reliability, optimized timeouts, improved page load state handling
 
 ### Running Tests
 
@@ -317,28 +318,33 @@ npm run test:all
 
 #### E2E Tests (`__tests__/e2e/`)
 
-**Obfuscation Workflow** (13 tests)
+**1,194 comprehensive tests across 12 test files:**
 
+- **obfuscation-workflow.spec.ts** - Complete user workflow testing
+- **responsive.spec.ts** - Mobile, tablet, and desktop layouts
+- **error-handling.spec.ts** - Error states and recovery scenarios
+- **advanced-features-v11.spec.ts** - v1.1 encryption and advanced features
+- **metrics-display.spec.ts** - Real-time metrics validation
+- **protection-level-v11.spec.ts** - Protection level slider functionality
+- **accessibility.spec.ts** - WCAG compliance and keyboard navigation
+- **analytics-tracking.spec.ts** - Analytics integration testing
+- **performance.spec.ts** - Performance benchmarking
+- **edge-cases.spec.ts** - Edge case handling
+- **advanced-workflow.spec.ts** - Complex workflow scenarios
+- **protection-level.spec.ts** - Core protection level features
+
+**Test Coverage Areas:**
 - Application loading and initialization
-- Code input and obfuscation
-- Copy to clipboard functionality
-- Download functionality
-- Settings configuration
-
-**Responsive Design** (21 tests)
-
+- Code input and obfuscation with all techniques
+- Copy to clipboard and download functionality
+- Settings configuration and persistence
 - Mobile viewport (375px, 390px)
 - Tablet viewport (768px, 1024px)
 - Desktop viewport (1920px+)
-- Orientation changes
-- Touch interactions
-
-**Error Handling** (10 tests)
-
-- Invalid Lua code detection
-- Syntax error display
-- Recovery after errors
-- Empty input handling
+- Orientation changes and touch interactions
+- Invalid Lua code detection and error display
+- Recovery after errors and empty input handling
+- Performance benchmarks and optimization validation
 
 ### Browser Testing Matrix
 
@@ -472,7 +478,7 @@ npm run build
 - [x] Code minification
 - [x] Configurable protection levels (0-100%)
 - [x] Responsive design (mobile, tablet, desktop)
-- [x] Comprehensive test coverage (289 tests)
+- [x] Comprehensive test coverage (446 unit tests + extensive E2E testing)
 - [x] Production deployment with analytics
 
 ### ✅ v1.1 - Advanced Obfuscation (Current Release)

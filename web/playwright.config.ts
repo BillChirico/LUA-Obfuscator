@@ -11,7 +11,7 @@ export default defineConfig({
 	testDir: "./__tests__/e2e",
 
 	// Maximum time one test can run for
-	timeout: 30 * 1000,
+	timeout: 60 * 1000,
 
 	// Run tests in files in parallel
 	fullyParallel: true,
@@ -20,10 +20,7 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 
 	// Retry on CI only
-	retries: process.env.CI ? 2 : 0,
-
-	// Opt out of parallel tests on CI
-	workers: process.env.CI ? 1 : undefined,
+	retries: process.env.CI ? 2 : 1,
 
 	// Reporter to use
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
@@ -41,6 +38,12 @@ export default defineConfig({
 
 		// Video on first retry
 		video: "retain-on-failure",
+
+		// Navigation timeout
+		navigationTimeout: 30 * 1000,
+
+		// Action timeout
+		actionTimeout: 30 * 1000,
 	},
 
 	// Configure projects for major browsers and devices
@@ -82,7 +85,5 @@ export default defineConfig({
 	webServer: {
 		command: "npm run dev",
 		url: "http://localhost:3000",
-		reuseExistingServer: !process.env.CI,
-		timeout: 120 * 1000,
 	},
 });

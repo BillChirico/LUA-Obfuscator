@@ -13,7 +13,7 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 - Beautiful, responsive UI that works on mobile, tablet, and desktop
 - Monaco code editor with Lua syntax highlighting
 - Real-time metrics display with detailed statistics
-- Comprehensive test coverage (446 unit tests, 37+ E2E tests)
+- Comprehensive test coverage (446 unit tests, 1,194 E2E tests across 12 test files)
 
 ## Architecture
 
@@ -214,13 +214,23 @@ Bill's Lua Obfuscator is a **production-ready** web-based Lua code obfuscation t
 
 **E2E Tests** (`__tests__/e2e/`)
 
-- 37 tests across 6 browser configurations
+- 1,194 tests across 12 test files running on 6 browser configurations
 - Browsers: Chrome, Firefox, Safari (Desktop + Mobile), iPad
-- Test files:
+- Test files include:
   - `obfuscation-workflow.spec.ts` - Full user workflow
   - `responsive.spec.ts` - Mobile/tablet/desktop layouts
   - `error-handling.spec.ts` - Error states and recovery
+  - `advanced-features-v11.spec.ts` - v1.1 encryption and advanced features
+  - `metrics-display.spec.ts` - Real-time metrics validation
+  - `protection-level-v11.spec.ts` - Protection level slider functionality
+  - `accessibility.spec.ts` - WCAG compliance and keyboard navigation
+  - `analytics-tracking.spec.ts` - Analytics integration
+  - `performance.spec.ts` - Performance benchmarking
+  - `edge-cases.spec.ts` - Edge case handling
+  - `advanced-workflow.spec.ts` - Complex workflow scenarios
+  - `protection-level.spec.ts` - Core protection level features
 - Framework: Playwright
+- Recent improvements: Enhanced test reliability, optimized timeouts, improved page load state handling
 
 **Running Tests:**
 
