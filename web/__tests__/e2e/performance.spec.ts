@@ -14,7 +14,15 @@ test.describe("Performance Tests", () => {
 	test("should obfuscate small code quickly", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
 
-		const smallCode = 'local x = 5\nprint(x)';
+		// Ensure Monaco is ready before setting input
+		await page.waitForFunction(
+			() => {
+				return (window as any).monaco?.editor?.getEditors?.()?.length > 0;
+			},
+			{ timeout: 10000 }
+		);
+
+		const smallCode = "local x = 5\nprint(x)";
 		await monaco.setInputCode(smallCode);
 
 		const startTime = Date.now();
@@ -24,7 +32,7 @@ test.describe("Performance Tests", () => {
 
 		// Should complete in under 3 seconds
 		expect(duration).toBeLessThan(3000);
-		
+
 		const output = await monaco.getEditorContent(1);
 		expect(output.length).toBeGreaterThan(0);
 	});
@@ -49,7 +57,7 @@ test.describe("Performance Tests", () => {
 
 		// Should complete in under 10 seconds
 		expect(duration).toBeLessThan(10000);
-		
+
 		const output = await monaco.getEditorContent(1);
 		expect(output.length).toBeGreaterThan(mediumCode.length * 0.5);
 	});
@@ -76,7 +84,7 @@ test.describe("Performance Tests", () => {
 
 		// Should complete in reasonable time
 		expect(duration).toBeLessThan(15000);
-		
+
 		const output = await monaco.getEditorContent(1);
 		expect(output.length).toBeGreaterThan(0);
 	});
@@ -84,7 +92,7 @@ test.describe("Performance Tests", () => {
 	test("should handle rapid consecutive obfuscations", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
 
-		const testCode = 'local x = 10\nprint(x)';
+		const testCode = "local x = 10\nprint(x)";
 		await monaco.setInputCode(testCode);
 
 		// Perform 3 rapid obfuscations
@@ -116,11 +124,11 @@ test()`;
 
 		// UI should still be responsive
 		await page.waitForTimeout(200);
-		
+
 		// Should be able to interact with settings
 		const mangleSwitch = await ui.getSwitch("mangle-names");
 		await expect(mangleSwitch).toBeVisible();
-		
+
 		// Wait for obfuscation to complete
 		await monaco.waitForOutput();
 	});
@@ -133,17 +141,17 @@ test()`;
 end`;
 
 		await monaco.setInputCode(code);
-		
+
 		// Start obfuscation
 		await ui.clickObfuscate(false);
-		
+
 		// Try to change settings while processing
 		await page.waitForTimeout(100);
 		await ui.toggleSwitch("mangle-names");
-		
+
 		// Wait for completion
 		await monaco.waitForOutput();
-		
+
 		const output = await monaco.getEditorContent(1);
 		expect(output.length).toBeGreaterThan(0);
 	});
@@ -151,7 +159,7 @@ end`;
 	test("should display metrics after obfuscation without delay", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
 
-		await monaco.setInputCode('local x = 5\nprint(x)');
+		await monaco.setInputCode("local x = 5\nprint(x)");
 		await ui.clickObfuscate();
 		await monaco.waitForOutput();
 
@@ -163,20 +171,20 @@ end`;
 	test("should handle protection level changes efficiently", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
 
-		const code = 'local value = 100\nprint(value)';
+		const code = "local value = 100\nprint(value)";
 		await monaco.setInputCode(code);
 
 		// Test different protection levels
 		const levels = [0, 30, 60, 100];
-		
+
 		for (const level of levels) {
 			await ui.setProtectionLevel(level);
 			await ui.clickObfuscate();
 			await monaco.waitForOutput();
-			
+
 			const output = await monaco.getEditorContent(1);
 			expect(output.length).toBeGreaterThan(0);
-			
+
 			await page.waitForTimeout(200);
 		}
 	});

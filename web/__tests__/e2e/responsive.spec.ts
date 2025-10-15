@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createHelpers } from "./helpers";
+import { createHelpers, waitForPageReady } from "./helpers";
 
 /**
  * E2E tests for responsive design behavior
@@ -11,7 +11,7 @@ test.describe("Responsive Design", () => {
 
 		test("should display mobile layout correctly", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Header should be visible
 			await expect(page.getByRole("heading", { name: /Lua Obfuscator/i }).first()).toBeVisible();
@@ -29,7 +29,7 @@ test.describe("Responsive Design", () => {
 
 		test("should show buttons with text on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All buttons should be visible with text labels
 			const copyButton = page.getByRole("button", { name: "Copy obfuscated code to clipboard" });
@@ -43,7 +43,7 @@ test.describe("Responsive Design", () => {
 
 		test("should allow obfuscation on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Click obfuscate button
 			const obfuscateButton = page.getByRole("button", { name: "Obfuscate Lua code" });
@@ -57,7 +57,7 @@ test.describe("Responsive Design", () => {
 
 		test("should make settings accessible on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Settings section should exist below editors
 			const settingsHeading = page.getByText("Obfuscation Settings");
@@ -76,7 +76,7 @@ test.describe("Responsive Design", () => {
 
 		test("should display tablet layout correctly", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All main sections should be visible
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("Responsive Design", () => {
 
 		test("should show full button text on tablet", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Buttons with full text should be visible
 			const copyButton = page.getByRole("button", { name: "Copy obfuscated code to clipboard" });
@@ -100,7 +100,7 @@ test.describe("Responsive Design", () => {
 
 		test("should allow full workflow on tablet", async ({ page, context, browserName }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 			// Safari and Firefox don't support clipboard permissions
 			const skipClipboard = browserName === "webkit" || browserName === "firefox";
 			if (!skipClipboard) {
@@ -137,7 +137,7 @@ test.describe("Responsive Design", () => {
 
 		test("should display desktop layout with side-by-side editors", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All elements should be visible
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -150,7 +150,7 @@ test.describe("Responsive Design", () => {
 
 		test("should show full UI with all features", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// All buttons with full text
 			await expect(page.getByRole("button", { name: "Copy obfuscated code to clipboard" })).toBeVisible();
@@ -167,10 +167,10 @@ test.describe("Responsive Design", () => {
 		});
 
 		test("should handle full workflow smoothly on desktop", async ({ page, context, browserName }) => {
-		const { monaco } = createHelpers(page);
+			const { monaco } = createHelpers(page);
 
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 			// Safari and Firefox don't support clipboard permissions
 			const skipClipboard = browserName === "webkit" || browserName === "firefox";
 			if (!skipClipboard) {
@@ -210,7 +210,7 @@ test.describe("Responsive Design", () => {
 		test("should adapt layout at sm breakpoint (640px)", async ({ page }) => {
 			await page.setViewportSize({ width: 640, height: 800 });
 			await page.goto("/");
-			try { await page.waitForLoadState("networkidle", { timeout: 10000 }); } catch { await page.waitForLoadState("domcontentloaded"); }
+			await waitForPageReady(page);
 
 			// Subtitle should be visible at sm and above
 			await expect(page.getByText("Professional code protection & security")).toBeVisible();
@@ -222,7 +222,7 @@ test.describe("Responsive Design", () => {
 		test("should adapt layout at lg breakpoint (1024px)", async ({ page }) => {
 			await page.setViewportSize({ width: 1024, height: 768 });
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Desktop-style layout should be active
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
@@ -242,7 +242,7 @@ test.describe("Responsive Design", () => {
 			// Start in portrait
 			await page.setViewportSize({ width: 390, height: 844 });
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Verify layout works in portrait
 			await expect(page.getByText("Lua Obfuscator").first()).toBeVisible();
@@ -262,7 +262,7 @@ test.describe("Responsive Design", () => {
 
 		test("should support touch interactions on mobile", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Tap obfuscate button
 			await page.locator('[aria-label*="Obfuscate"]').tap();
@@ -275,7 +275,7 @@ test.describe("Responsive Design", () => {
 
 		test("should support touch toggle for switches", async ({ page }) => {
 			await page.goto("/");
-			await page.waitForLoadState("networkidle");
+			await waitForPageReady(page);
 
 			// Tap switches
 			await page.locator("#mangle-names").tap();

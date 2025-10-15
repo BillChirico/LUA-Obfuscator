@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { waitForPageReady } from "./helpers";
 
 /**
  * E2E tests for analytics tracking
@@ -16,7 +17,7 @@ test.describe("Analytics Tracking", () => {
 		});
 
 		await page.goto("/");
-		await page.waitForLoadState("networkidle");
+		await waitForPageReady(page);
 	});
 
 	test("should track obfuscation event with correct parameters", async ({ page }) => {
@@ -88,9 +89,15 @@ test.describe("Analytics Tracking", () => {
 		expect(downloadEvent.postData.events[0].params.code_size).toBeGreaterThan(0);
 	});
 
-	test("should track copy event when copy button is clicked", async ({ page, context }) => {
-		// Grant clipboard permissions
-		await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+	test("should track copy event when copy button is clicked", async ({ page, context, browserName }) => {
+		// Grant clipboard permissions (Chrome only)
+		if (browserName === "chromium") {
+			try {
+				await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			} catch (error) {
+				console.warn("Clipboard permissions not supported:", error);
+			}
+		}
 
 		const analyticsRequests: any[] = [];
 
@@ -221,25 +228,26 @@ test.describe("Analytics Tracking", () => {
 		await slider.scrollIntoViewIfNeeded();
 		await slider.click();
 		await page.waitForTimeout(200);
-		
+
 		// Use arrow keys to change value
 		for (let i = 0; i < 5; i++) {
 			await page.keyboard.press("ArrowRight");
 			await page.waitForTimeout(100);
 		}
-		
+
 		// Wait for analytics to be sent
 		await page.waitForTimeout(800);
 
 		// Verify at least some analytics events were captured
 		expect(analyticsRequests.length).toBeGreaterThan(0);
-		
+
 		// Check for protection level or compression level change events
 		const protectionEvents = analyticsRequests.filter(
-			req => req.postData?.events?.[0]?.name?.includes("protection") ||
-			       req.postData?.events?.[0]?.name?.includes("compression") ||
-			       req.postData?.events?.[0]?.params?.setting_name?.includes("compression") ||
-			       req.postData?.events?.[0]?.params?.setting_name?.includes("protection")
+			req =>
+				req.postData?.events?.[0]?.name?.includes("protection") ||
+				req.postData?.events?.[0]?.name?.includes("compression") ||
+				req.postData?.events?.[0]?.params?.setting_name?.includes("compression") ||
+				req.postData?.events?.[0]?.params?.setting_name?.includes("protection")
 		);
 
 		// The slider movement should trigger at least one analytics event

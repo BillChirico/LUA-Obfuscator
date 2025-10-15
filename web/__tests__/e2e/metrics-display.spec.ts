@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createHelpers } from "./helpers";
+import { createHelpers, waitForPageReady } from "./helpers";
 
 /**
  * E2E tests for obfuscation metrics display
@@ -8,7 +8,7 @@ import { createHelpers } from "./helpers";
 test.describe("Metrics Display", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/");
-		await page.waitForLoadState("networkidle");
+		await waitForPageReady(page);
 	});
 
 	test.describe("Metrics Card Visibility", () => {

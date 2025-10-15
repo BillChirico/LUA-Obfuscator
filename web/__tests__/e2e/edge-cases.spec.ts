@@ -45,7 +45,7 @@ return emoji`;
 		const longLine = "local x = " + Array(100).fill("1").join(" + ");
 
 		// Use evaluate to set editor content directly (faster than typing)
-		await page.evaluate((code) => {
+		await page.evaluate(code => {
 			const editor = (window as any).monaco?.editor?.getModels()?.[0];
 			if (editor) {
 				editor.setValue(code);
@@ -100,10 +100,10 @@ return emoji`;
 
 		await monaco.setInputCode(commentOnlyCode);
 		await ui.clickObfuscate();
-		
+
 		// Should handle gracefully (may produce minimal output or error)
 		await page.waitForTimeout(1000);
-		
+
 		const output = await monaco.getEditorContent(1);
 		// Either produces output or shows error, both are acceptable
 		const hasError = await ui.hasError();
@@ -178,6 +178,14 @@ Here
 	test("should handle hexadecimal and scientific notation", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
 
+		// Ensure Monaco is ready before setting input
+		await page.waitForFunction(
+			() => {
+				return (window as any).monaco?.editor?.getEditors?.()?.length > 0;
+			},
+			{ timeout: 10000 }
+		);
+
 		const numericCode = `local hex = 0xFF
 local sci = 1.23e-4
 local large = 1e10
@@ -198,6 +206,14 @@ print(hex, sci, large)`;
 
 	test("should handle varargs and multiple returns", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
+
+		// Ensure Monaco is ready before setting input
+		await page.waitForFunction(
+			() => {
+				return (window as any).monaco?.editor?.getEditors?.()?.length > 0;
+			},
+			{ timeout: 10000 }
+		);
 
 		const varargsCode = `function multiReturn(...)
   local args = {...}
@@ -257,7 +273,7 @@ while coroutine.status(co) ~= "dead" do
 end`;
 
 		// Use evaluate to set editor content directly (avoids click interception)
-		await page.evaluate((code) => {
+		await page.evaluate(code => {
 			const editor = (window as any).monaco?.editor?.getModels()?.[0];
 			if (editor) {
 				editor.setValue(code);
@@ -341,6 +357,14 @@ return empty, emptyTable, emptyFunc`;
 
 	test("should handle require and module patterns", async ({ page }) => {
 		const { monaco, ui } = createHelpers(page);
+
+		// Ensure Monaco is ready before setting input
+		await page.waitForFunction(
+			() => {
+				return (window as any).monaco?.editor?.getEditors?.()?.length > 0;
+			},
+			{ timeout: 10000 }
+		);
 
 		const moduleCode = `local M = {}
 

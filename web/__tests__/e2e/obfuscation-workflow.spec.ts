@@ -73,8 +73,14 @@ test.describe("Obfuscation Workflow", () => {
 			test.skip();
 		}
 
-		// Grant clipboard permissions
-		await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+		// Grant clipboard permissions (Chrome only)
+		if (browserName === "chromium") {
+			try {
+				await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+			} catch (error) {
+				console.warn("Clipboard permissions not supported:", error);
+			}
+		}
 
 		// Obfuscate code first
 		await ui.clickObfuscate();
