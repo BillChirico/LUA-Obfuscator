@@ -26,6 +26,21 @@ test.describe("Obfuscation Workflow", () => {
 		await expect(page.getByText("Obfuscation Settings")).toBeVisible();
 	});
 
+	test("should display version v1.1.0 with author in footer", async ({ page }) => {
+		// Check that the footer is visible with version and author information
+		const footer = page.getByRole("contentinfo");
+		await expect(footer).toBeVisible();
+
+		// Verify footer contains version and author
+		await expect(footer.getByText("v1.1.0 by")).toBeVisible();
+
+		// Verify author link is present and working
+		const authorLink = footer.getByRole("link", { name: "Visit Bill Chirico's website" });
+		await expect(authorLink).toBeVisible();
+		await expect(authorLink).toHaveAttribute("href", "https://billchirico.dev/");
+		await expect(authorLink).toHaveText("Bill Chirico");
+	});
+
 	test("should have default Lua code in input editor", async ({ page }) => {
 		const { monaco } = createHelpers(page);
 		// The input editor should contain the default example code

@@ -25,6 +25,11 @@ test.describe("Responsive Design", () => {
 
 			// Settings panel should be below editors and scrollable
 			await expect(page.getByText("Obfuscation Settings")).toBeVisible();
+
+			// Footer with version and author should be visible on mobile
+			const footer = page.getByRole("contentinfo");
+			await expect(footer).toBeVisible();
+			await expect(footer.getByText("Bill Chirico")).toBeVisible();
 		});
 
 		test("should show buttons with text on mobile", async ({ page }) => {
@@ -82,6 +87,11 @@ test.describe("Responsive Design", () => {
 			await expect(page.getByText("Original Lua Code")).toBeVisible();
 			await expect(page.getByText("Obfuscated Output")).toBeVisible();
 			await expect(page.getByText("Obfuscation Settings")).toBeVisible();
+
+			// Footer with version and author should be visible on tablet
+			const footer = page.getByRole("contentinfo");
+			await expect(footer).toBeVisible();
+			await expect(footer.getByText("Bill Chirico")).toBeVisible();
 		});
 
 		test("should show full button text on tablet", async ({ page }) => {
@@ -146,6 +156,11 @@ test.describe("Responsive Design", () => {
 
 			// Subtitle should be visible on desktop
 			await expect(page.getByText("Professional code protection & security")).toBeVisible();
+
+			// Footer with version and author should be visible on desktop
+			const footer = page.getByRole("contentinfo");
+			await expect(footer).toBeVisible();
+			await expect(footer.getByText("Bill Chirico")).toBeVisible();
 		});
 
 		test("should show full UI with all features", async ({ page }) => {
