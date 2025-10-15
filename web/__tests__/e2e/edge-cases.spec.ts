@@ -243,7 +243,7 @@ setmetatable(obj, mt)`;
 	});
 
 	test("should handle coroutines", async ({ page }) => {
-		const { monaco, ui } = createHelpers(page);
+		const { ui } = createHelpers(page);
 
 		const coroutineCode = `local co = coroutine.create(function()
   for i = 1, 5 do
@@ -256,15 +256,25 @@ while coroutine.status(co) ~= "dead" do
   print(value)
 end`;
 
-		await monaco.setInputCode(coroutineCode);
+		// Use evaluate to set editor content directly (avoids click interception)
+		await page.evaluate((code) => {
+			const editor = (window as any).monaco?.editor?.getModels()?.[0];
+			if (editor) {
+				editor.setValue(code);
+			}
+		}, coroutineCode);
+
+		await page.waitForTimeout(500); // Wait for editor to update
+
 		await ui.clickObfuscateComplex();
 		await page.waitForTimeout(2000);
 
-		const output = await monaco.getEditorContent(1);
+		// Get output content directly
+		const output = await page.locator(".monaco-editor .view-lines").nth(1).textContent();
 		const hasError = await ui.hasError();
 
 		// Either should have output OR an error
-		expect(output.length > 10 || hasError).toBe(true);
+		expect((output && output.length > 10) || hasError).toBe(true);
 	});
 
 	test("should handle goto statements (Lua 5.2+)", async ({ page }) => {

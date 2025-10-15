@@ -25,7 +25,7 @@ export default defineConfig({
 
 	// Limit parallel workers to prevent server overload
 	// Use 1 worker on CI, 4 workers locally (was unlimited before)
-	workers: process.env.CI ? 1 : 4,
+	// workers: process.env.CI ? 1 : 4,
 
 	// Reporter to use
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
