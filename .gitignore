@@ -42,3 +42,5 @@ code-review-report.json
 test-output.txt
 test-results/.last-run.json
 chrome-results.json
+web/test-results.log
+web/full-test-results.log
